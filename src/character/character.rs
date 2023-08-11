@@ -63,12 +63,12 @@ impl Character {
 
     pub fn roll_attack_with_damage(&self, enemy_armor_class: i16) -> (HitResult, u16) {
         let hit_result = self.weapon_attack.roll_attack(enemy_armor_class);
-        let total_damage = self.weapon_attack.calculate_total_damage(hit_result);
+        let total_damage = self.weapon_attack.calculate_damage(hit_result);
         (hit_result, total_damage)
     }
 
     pub fn mean_damage(&self, enemy_armor_class: i16) -> f32 {
-        self.weapon_attack.mean_damage(enemy_armor_class)
+        self.weapon_attack.mean_damage_against_ac(enemy_armor_class)
     }
 
     pub(crate) fn take_damage(&mut self, total_damage: u16) {

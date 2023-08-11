@@ -9,6 +9,8 @@ use crate::{
     },
 };
 
+use super::damage::Damage;
+
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum HitResult {
     Miss,
@@ -16,19 +18,17 @@ pub enum HitResult {
     Critical,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 pub struct Attack<T: Rollable<u32> + Meanable> {
     attack_bonus: i8,
-    damage_dice: T,
-    damage_bonus: i8,
+    damage: Damage<T>,
 }
 
 impl<T: Rollable<u32> + Meanable> Attack<T> {
     pub fn new(attack_bonus: i8, damage: T, bonus: i8) -> Self {
         Attack {
             attack_bonus,
-            damage_dice: damage,
-            damage_bonus: bonus,
+            damage: Damage::new(damage, bonus),
         }
     }
 
@@ -44,21 +44,15 @@ impl<T: Rollable<u32> + Meanable> Attack<T> {
         }
     }
 
-    pub fn calculate_total_damage(&self, hit_result: HitResult) -> u16 {
+    pub fn calculate_damage(&self, hit_result: HitResult) -> u16 {
         match hit_result {
             HitResult::Miss => 0,
-            HitResult::Hit => {
-                let total_dice_roll = self.damage_dice.roll();
-                cmp::max(0, total_dice_roll as i32 + self.attack_bonus as i32) as u16
-            }
-            HitResult::Critical => {
-                let total_dice_roll = self.damage_dice.roll();
-                Attack::calculate_total_damage(self, HitResult::Hit) + total_dice_roll as u16
-            }
+            HitResult::Hit => self.damage.calculate_regular(),
+            HitResult::Critical => self.damage.calculate_crit(),
         }
     }
 
-    pub fn mean_damage(&self, enemy_armor_class: i16) -> f32 {
+    pub fn mean_damage_against_ac(&self, enemy_armor_class: i16) -> f32 {
         let effective_ac = enemy_armor_class - self.attack_bonus as i16;
         let reg_hit_prob = if effective_ac >= 20 {
             0.0
@@ -70,11 +64,11 @@ impl<T: Rollable<u32> + Meanable> Attack<T> {
     }
 
     fn mean_damage_on_hit(&self) -> f32 {
-        self.damage_dice.mean() + self.damage_bonus as f32
+        self.damage.mean_on_hit()
     }
 
     fn mean_damage_on_crit(&self) -> f32 {
-        self.mean_damage_on_hit() + self.damage_dice.mean()
+        self.damage.mean_on_hit()
     }
 }
 
