@@ -35,7 +35,9 @@ impl<T: Rollable<u32> + Meanable> Attack<T> {
     pub fn roll_attack(&self, ac: i16) -> HitResult {
         let hit_roll = Die::D20.roll();
         let is_crit = is_natural_20(hit_roll);
-        let is_hit = beats_dc(hit_roll as i32, ac as i32 - (self.attack_bonus as i32));
+        let is_critical_miss = hit_roll == 1;
+        let effective_ac = ac as i32 - self.attack_bonus as i32;
+        let is_hit = !is_critical_miss && beats_dc(hit_roll as i32, effective_ac);
 
         match (is_hit, is_crit) {
             (_, true) => HitResult::Critical,
@@ -57,7 +59,7 @@ impl<T: Rollable<u32> + Meanable> Attack<T> {
         let reg_hit_prob = if effective_ac >= 20 {
             0.0
         } else {
-            cmp::min(20 - effective_ac, 19) as f32 * 0.05
+            cmp::min(20 - effective_ac - 1, 18) as f32 * 0.05 // note: subtract 1 to account for fumble
         };
 
         reg_hit_prob * self.mean_damage_on_hit() + 0.05 * self.mean_damage_on_crit()
@@ -69,6 +71,11 @@ impl<T: Rollable<u32> + Meanable> Attack<T> {
 
     fn mean_damage_on_crit(&self) -> f32 {
         self.damage.mean_on_hit()
+    }
+
+    pub(crate) fn roll_attack_with_damage(&self, ac: i16) -> u16 {
+        let hit_result = self.roll_attack(ac);
+        self.calculate_damage(hit_result)
     }
 }
 
