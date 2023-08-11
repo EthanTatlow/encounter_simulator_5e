@@ -1,6 +1,6 @@
-use std::clone;
 
-use crate::utils::{dice::{Die, roll_sum, Rollable}, probability::Meanable};
+
+use crate::utils::{dice::Die, probability::Meanable, rollable::{roll_sum, Rollable}};
 
 pub struct Weapon {
     damage_dice: Vec<Die>,
@@ -69,10 +69,6 @@ impl WeaponType {
 }
 
 impl Weapon {
-    pub fn roll_damage(&self) -> u16 {
-        roll_sum(&self.damage_dice)
-    }
-
     pub fn is_finesse(&self) -> bool {
         self.finesse
     }
@@ -94,9 +90,9 @@ impl WeaponDamage {
     }
 }
 
-impl Rollable<u16> for WeaponDamage {
-    fn roll(&self) ->  u16 {
-        self.weapon.roll_damage()
+impl Rollable<u32> for WeaponDamage {
+    fn roll(&self) ->  u32 {
+        roll_sum(&self.weapon.damage_dice)
     }
 }
 

@@ -1,14 +1,12 @@
-use crate::weapons::weapons::{WeaponType, WeaponDamage};
-use crate::attack::{Attack, HitResult, from_weapon_and_stats};
+use crate::attack::{weapon::{WeaponDamage, WeaponType}, attack::{Attack, from_weapon_and_stats, HitResult}};
 
-
-pub struct StaticPlayerStats {
+pub struct StaticStats {
     strength: u8,
     dexterity: u8,
     proficiency_bonus: u8,
 }
 
-impl StaticPlayerStats {
+impl StaticStats {
     pub fn strength(&self) -> u8 {
         self.strength
     }
@@ -22,13 +20,13 @@ impl StaticPlayerStats {
     }
 }
 
-pub struct Player {
+pub struct Character {
     weapon_attack: Attack<WeaponDamage>,
     hit_points: u8,
-    stats: StaticPlayerStats
+    stats: StaticStats
 }
 
-impl Player {
+impl Character {
     pub fn new(
         weapon_type: WeaponType,
         strength: u8,
@@ -36,11 +34,11 @@ impl Player {
         hit_points: u8,
         proficiency_bonus: u8,
     ) -> Self {
-        let stats = StaticPlayerStats{
+        let stats = StaticStats{
             strength, dexterity, proficiency_bonus
         };
         let weapon_attack = from_weapon_and_stats(weapon_type.weapon(), &stats);
-        Player {
+        Character {
             weapon_attack,
             stats,
             hit_points,

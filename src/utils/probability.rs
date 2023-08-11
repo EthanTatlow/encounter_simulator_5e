@@ -6,6 +6,6 @@ pub trait Meanable {
 
 impl Meanable for Die {
     fn mean(&self) -> f32 {
-        return (self.get_number() + 1) as f32 / 2.0;
+        return (self.sides() + 1) as f32 / 2.0;
     }
 }
