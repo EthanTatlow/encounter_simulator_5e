@@ -2,8 +2,15 @@ use rand::Rng;
 
 use super::rollable::Rollable;
 
+#[derive(Copy, Clone)]
 pub enum Die {
-    D2, D4, D6, D8, D10, D12, D20
+    D2,
+    D4,
+    D6,
+    D8,
+    D10,
+    D12,
+    D20,
 }
 
 impl Rollable<u32> for Die {
@@ -14,8 +21,7 @@ impl Rollable<u32> for Die {
 }
 
 impl Die {
-    pub 
-    const fn sides(&self) -> u32 {
+    pub const fn sides(&self) -> u32 {
         match self {
             Die::D2 => 2,
             Die::D4 => 4,
@@ -37,24 +43,24 @@ pub fn is_natural_20(val: u32) -> bool {
 }
 
 #[cfg(test)]
-mod tests {    
+mod tests {
     use super::*;
 
     #[test]
     fn test_beats_dc() {
         // Given
         let test_cases = [
-            (10, 10, true),   // Equal values, should beat
-            (5, 10, false),   // Lower roll, should not beat
-            (9, 10, false),   // Lower roll, should not beat
-            (-3, -3, true),   // Equal values, should beat
-            (20, 15, true),   // Higher roll, should beat
+            (10, 10, true), // Equal values, should beat
+            (5, 10, false), // Lower roll, should not beat
+            (9, 10, false), // Lower roll, should not beat
+            (-3, -3, true), // Equal values, should beat
+            (20, 15, true), // Higher roll, should beat
         ];
-        
+
         for &(roll, dc, expected) in &test_cases {
             // When
             let result = beats_dc(roll, dc);
-            
+
             // Then
             assert_eq!(result, expected);
         }

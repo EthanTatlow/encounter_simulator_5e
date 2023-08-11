@@ -1,7 +1,13 @@
 use std::cmp;
 
-use crate::{attack::weapon::{Weapon, WeaponDamage}, utils::{dice::{Die, is_natural_20, beats_dc}, probability::Meanable, rollable::Rollable}};
-
+use crate::{
+    attack::weapon::{Weapon, WeaponDamage},
+    utils::{
+        dice::{beats_dc, is_natural_20, Die},
+        probability::Meanable,
+        rollable::Rollable,
+    },
+};
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum HitResult {
@@ -10,13 +16,14 @@ pub enum HitResult {
     Critical,
 }
 
+#[derive(Copy, Clone)]
 pub struct Attack<T: Rollable<u32> + Meanable> {
     attack_bonus: i8,
     damage_dice: T,
     damage_bonus: i8,
 }
 
-impl <T: Rollable<u32> + Meanable> Attack<T> {
+impl<T: Rollable<u32> + Meanable> Attack<T> {
     pub fn new(attack_bonus: i8, damage: T, bonus: i8) -> Self {
         Attack {
             attack_bonus,
@@ -56,7 +63,7 @@ impl <T: Rollable<u32> + Meanable> Attack<T> {
         let reg_hit_prob = if effective_ac >= 20 {
             0.0
         } else {
-            cmp::min( 20 - effective_ac, 19) as f32 * 0.05
+            cmp::min(20 - effective_ac, 19) as f32 * 0.05
         };
 
         reg_hit_prob * self.mean_damage_on_hit() + 0.05 * self.mean_damage_on_crit()
@@ -64,20 +71,18 @@ impl <T: Rollable<u32> + Meanable> Attack<T> {
 
     fn mean_damage_on_hit(&self) -> f32 {
         self.damage_dice.mean() + self.damage_bonus as f32
-    } 
-    
+    }
+
     fn mean_damage_on_crit(&self) -> f32 {
         self.mean_damage_on_hit() + self.damage_dice.mean()
     }
-
 }
-
 
 fn weapon_ability_modifier(weapon: &Weapon, strength: u8, dex: u8) -> i8 {
     if weapon.is_finesse() {
         (dex / 2) as i8 - 5
     } else {
-        (strength / 2) as i8  - 5
+        (strength / 2) as i8 - 5
     }
 }
 
@@ -86,8 +91,16 @@ fn attack_bonus(weapon: &Weapon, strength: u8, dex: u8, prof: u8) -> i8 {
     prof as i8 + ability_modifier
 }
 
-pub(crate) fn from_weapon_and_stats(weapon: Weapon, stats: &crate::character::character::StaticStats) -> Attack<WeaponDamage> {
-    let attack_bonus = attack_bonus(&weapon, stats.strength(), stats.dexterity(), stats.proficiency_bonus());
+pub(crate) fn from_weapon_and_stats(
+    weapon: Weapon,
+    stats: &crate::character::character::StaticStats,
+) -> Attack<WeaponDamage> {
+    let attack_bonus = attack_bonus(
+        &weapon,
+        stats.strength(),
+        stats.dexterity(),
+        stats.proficiency_bonus(),
+    );
     let damage_bonus = weapon_ability_modifier(&weapon, stats.strength(), stats.dexterity());
     Attack::new(attack_bonus, WeaponDamage::new(weapon), damage_bonus)
 }
