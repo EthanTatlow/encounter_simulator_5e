@@ -1,11 +1,8 @@
-use std::{cmp::min, collections::HashMap};
+use std::cmp::min;
 
-use crate::{
-    attack::{
-        attack::{from_weapon_and_stats, Attack, HitResult},
-        weapon::{WeaponDamage, WeaponType},
-    },
-    utils::save::SaveType,
+use crate::attack::{
+    attack::{from_weapon_and_stats, Attack},
+    weapon::{WeaponDamage, WeaponType},
 };
 
 use super::effect::NegativeEffect;

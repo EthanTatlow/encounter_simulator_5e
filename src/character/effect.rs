@@ -1,5 +1,5 @@
 use crate::{
-    attack::{attack::Attack, save_based::SaveBasedAttack, weapon::Weapon},
+    attack::{attack::Attack, save_based::SaveBasedAttack},
     utils::{probability::Meanable, rollable::Rollable},
 };
 
