@@ -7,8 +7,12 @@ use crate::utils::{
     save::Save,
 };
 
-use super::damage::Damage;
+use super::{
+    damage::Damage,
+    spell::{Spell, SpellDamage},
+};
 
+#[derive(Clone)]
 pub struct SaveBasedAttack<T: Rollable<u32> + Meanable> {
     save: Save,
     nr_targets: u8,
@@ -17,6 +21,15 @@ pub struct SaveBasedAttack<T: Rollable<u32> + Meanable> {
 }
 
 impl<T: Rollable<u32> + Meanable> SaveBasedAttack<T> {
+    fn new(save: Save, nr_targets: u8, half_on_success: bool, damage: T) -> SaveBasedAttack<T> {
+        Self {
+            save,
+            nr_targets,
+            half_on_success,
+            damage: Damage::new(damage, 0),
+        }
+    }
+
     pub fn roll_save(&self, save_bonus: i16) -> u16 {
         let roll = Die::D20.roll();
         let take_full_damage = !beats_dc(roll as i16, self.save.dc() as i16 - save_bonus);
@@ -37,4 +50,19 @@ impl<T: Rollable<u32> + Meanable> SaveBasedAttack<T> {
     pub fn nr_targets(&self) -> u8 {
         self.nr_targets
     }
+}
+
+pub fn from_spell_and_stats(
+    spell: Spell,
+    stats: &crate::character::character::StaticStats,
+) -> SaveBasedAttack<SpellDamage> {
+    // TODO: find spell-casting ability
+    let dc = 8 + stats.proficiency_bonus() as i16 + stats.ability_modifiers().int();
+
+    SaveBasedAttack::new(
+        Save::new(spell.save_type().clone(), dc),
+        spell.nr_targets(),
+        spell.half_on_success(),
+        SpellDamage::new(spell),
+    )
 }

@@ -2,7 +2,7 @@ use std::cmp::min;
 
 use rand::{seq::SliceRandom, thread_rng};
 
-use crate::character::{character::Character, effect::NegativeEffect};
+use crate::character::character::Character;
 
 pub fn run_round(players: &mut [Character], enemies: &mut [Character]) {
     // simplifying assumption: first players, then enemies. no initiative

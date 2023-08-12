@@ -1,3 +1,4 @@
+#[derive(Clone)]
 pub enum SaveType {
     STR,
     DEX,
@@ -7,17 +8,22 @@ pub enum SaveType {
     CHA,
 }
 
+#[derive(Clone)]
 pub struct Save {
     save_type: SaveType,
-    dc: u8,
+    dc: i16,
 }
 
 impl Save {
+    pub fn new(save_type: SaveType, dc: i16) -> Save {
+        return Self { save_type, dc };
+    }
+
     pub fn save_type(&self) -> &SaveType {
         &self.save_type
     }
 
-    pub fn dc(&self) -> u8 {
+    pub fn dc(&self) -> i16 {
         self.dc
     }
 }

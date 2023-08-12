@@ -1,7 +1,11 @@
 use std::cmp::min;
 
+use rand::{thread_rng, Rng};
+
 use crate::attack::{
     attack::{from_weapon_and_stats, Attack},
+    save_based::{from_spell_and_stats, SaveBasedAttack},
+    spell::{Spell, SpellDamage},
     weapon::{WeaponDamage, WeaponType},
 };
 
@@ -32,7 +36,8 @@ impl StaticStats {
 
 #[derive(Clone)]
 pub struct Character {
-    weapon_attack: Attack<WeaponDamage>,
+    weapon_attacks: Vec<Attack<WeaponDamage>>,
+    spell_attacks: Vec<SaveBasedAttack<SpellDamage>>,
     hit_points: u16,
     stats: StaticStats,
 }
@@ -46,20 +51,50 @@ impl Character {
     ) -> Self {
         let stats = StaticStats {
             ac,
-            ability_modifiers,
-            save_modifiers: SaveModifiers::default(),
+            ability_modifiers: ability_modifiers.clone(),
+            save_modifiers: SaveModifiers::from_modifiers(ability_modifiers),
             proficiency_bonus: 2,
         };
         let weapon_attack = from_weapon_and_stats(weapon_type.weapon(), &stats);
         Character {
-            weapon_attack,
+            weapon_attacks: vec![weapon_attack],
+            spell_attacks: vec![],
             stats,
             hit_points,
         }
     }
 
-    pub fn get_effects_on_enemies(&self) -> Vec<impl NegativeEffect> {
-        return vec![self.weapon_attack.clone()];
+    pub fn new_wiz(
+        spell: Spell,
+        ability_modifiers: AbilityModifiers,
+        ac: i16,
+        hit_points: u16,
+    ) -> Self {
+        let stats = StaticStats {
+            ac,
+            ability_modifiers,
+            save_modifiers: SaveModifiers::default(),
+            proficiency_bonus: 2,
+        };
+
+        Character {
+            weapon_attacks: vec![],
+            spell_attacks: vec![from_spell_and_stats(spell, &stats)],
+            stats,
+            hit_points,
+        }
+    }
+
+    pub fn get_effects_on_enemies(&self) -> Vec<Box<dyn NegativeEffect>> {
+        if !self.spell_attacks.is_empty() {
+            let spell_attack =
+                self.spell_attacks[thread_rng().gen_range(0..self.spell_attacks.len())].clone();
+            return vec![Box::new(spell_attack)];
+        }
+        self.weapon_attacks
+            .iter()
+            .map(|atk| Box::new(atk.clone()) as Box<dyn NegativeEffect>)
+            .collect()
     }
 
     pub fn ac(&self) -> i16 {

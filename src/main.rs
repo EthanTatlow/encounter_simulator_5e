@@ -3,21 +3,19 @@ pub mod character;
 pub mod combat;
 pub mod utils;
 
-use attack::weapon::WeaponType;
+use attack::{spell::Spell, weapon::WeaponType};
 use character::character::Character;
+use utils::{dice::Die, save::SaveType};
 
 use crate::{character::ability::AbilityModifiers, combat::round};
 
 fn main() {
-    let weapon_type = WeaponType::BattleAxe;
-    println!("Weapon: {:?}", weapon_type);
-
     let mut group1_wins = 0;
     let mut nr_rounds_sum = 0;
     let repetitions = 1000;
 
     for _ in 0..repetitions {
-        let mut group1 = get_group_1();
+        let mut group1 = get_fighters();
         let mut group2 = get_group_2();
 
         let mut nr_rounds = 0;
@@ -45,8 +43,8 @@ fn main() {
     );
 }
 
-fn get_group_1() -> Vec<Character> {
-    (0..10)
+fn get_fighters() -> Vec<Character> {
+    (0..20)
         .into_iter()
         .map(|_| {
             Character::new(
@@ -60,8 +58,9 @@ fn get_group_1() -> Vec<Character> {
 }
 
 fn get_group_2() -> Vec<Character> {
-    (0..20)
+    let spell = Spell::new(SaveType::DEX, true, 3, vec![Die::D6; 3]);
+    (0..15)
         .into_iter()
-        .map(|_| Character::new(WeaponType::Shortsword, AbilityModifiers::default(), 14, 9))
+        .map(|_| Character::new_wiz(spell.clone(), AbilityModifiers::default(), 15, 9))
         .collect()
 }

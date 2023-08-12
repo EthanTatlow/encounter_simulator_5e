@@ -14,6 +14,10 @@ impl SaveModifiers {
         }
     }
 
+    pub fn from_modifiers(modifiers: AbilityModifiers) -> Self {
+        return Self { modifiers };
+    }
+
     pub fn default() -> Self {
         Self {
             modifiers: AbilityModifiers::default(),
