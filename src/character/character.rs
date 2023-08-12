@@ -5,33 +5,28 @@ use crate::attack::{
     weapon::{WeaponDamage, WeaponType},
 };
 
-use super::effect::NegativeEffect;
 use super::save::SaveModifiers;
+use super::{ability::AbilityModifiers, effect::NegativeEffect};
 
 #[derive(Clone)]
 pub struct StaticStats {
-    strength: u8,
-    dexterity: u8,
     ac: i16,
+    ability_modifiers: AbilityModifiers,
+    save_modifiers: SaveModifiers,
     proficiency_bonus: u8,
-    saves: SaveModifiers,
 }
 
 impl StaticStats {
-    pub fn strength(&self) -> u8 {
-        self.strength
+    pub fn ability_modifiers(&self) -> &AbilityModifiers {
+        &self.ability_modifiers
     }
 
-    pub fn dexterity(&self) -> u8 {
-        self.dexterity
+    pub fn saves(&self) -> &SaveModifiers {
+        &self.save_modifiers
     }
 
     pub fn proficiency_bonus(&self) -> u8 {
         self.proficiency_bonus
-    }
-
-    pub fn saves(&self) -> &SaveModifiers {
-        &self.saves
     }
 }
 
@@ -45,18 +40,15 @@ pub struct Character {
 impl Character {
     pub fn new(
         weapon_type: WeaponType,
-        strength: u8,
-        dexterity: u8,
+        ability_modifiers: AbilityModifiers,
         ac: i16,
         hit_points: u16,
-        proficiency_bonus: u8,
     ) -> Self {
         let stats = StaticStats {
             ac,
-            strength,
-            dexterity,
-            proficiency_bonus,
-            saves: SaveModifiers::default(),
+            ability_modifiers,
+            save_modifiers: SaveModifiers::default(),
+            proficiency_bonus: 2,
         };
         let weapon_attack = from_weapon_and_stats(weapon_type.weapon(), &stats);
         Character {
@@ -74,15 +66,6 @@ impl Character {
         return self.stats.ac;
     }
 
-    pub fn roll_attack_with_damage(&self, enemy_armor_class: i16) -> u16 {
-        self.weapon_attack
-            .roll_attack_with_damage(enemy_armor_class)
-    }
-
-    pub fn mean_damage(&self, enemy_armor_class: i16) -> f32 {
-        self.weapon_attack.mean_damage_against_ac(enemy_armor_class)
-    }
-
     pub(crate) fn take_damage(&mut self, total_damage: u16) {
         self.hit_points -= min(total_damage, self.hit_points)
     }
@@ -92,6 +75,6 @@ impl Character {
     }
 
     pub fn saves(&self) -> &SaveModifiers {
-        &self.stats.saves
+        &self.stats.save_modifiers
     }
 }

@@ -1,3 +1,5 @@
+// This should include spells, spell-like effects, special abilities, etc.
+
 use crate::utils::{
     dice::{beats_dc, Die},
     probability::Meanable,

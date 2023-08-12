@@ -1,3 +1,5 @@
+// TODO: Weapons should likely be externalised rather than being hard-coded
+
 use crate::utils::{
     dice::Die,
     probability::Meanable,

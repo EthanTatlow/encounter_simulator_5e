@@ -6,7 +6,7 @@ pub mod utils;
 use attack::weapon::WeaponType;
 use character::character::Character;
 
-use crate::combat::round;
+use crate::{character::ability::AbilityModifiers, combat::round};
 
 fn main() {
     let weapon_type = WeaponType::BattleAxe;
@@ -16,13 +16,13 @@ fn main() {
     let repetitions = 10000;
     for _ in 0..repetitions {
         let mut group1 = [
-            Character::new(WeaponType::Shortsword, 16, 14, 14, 30, 2),
-            Character::new(WeaponType::Scimitar, 16, 14, 14, 30, 2),
+            Character::new(WeaponType::Shortsword, AbilityModifiers::default(), 14, 14),
+            Character::new(WeaponType::Scimitar, AbilityModifiers::default(), 14, 30),
         ];
 
         let mut group2 = [
-            Character::new(WeaponType::Longsword, 16, 14, 14, 30, 2),
-            Character::new(WeaponType::Greatsword, 16, 14, 14, 30, 2),
+            Character::new(WeaponType::Shortsword, AbilityModifiers::default(), 14, 14),
+            Character::new(WeaponType::Scimitar, AbilityModifiers::default(), 14, 30),
         ];
 
         loop {

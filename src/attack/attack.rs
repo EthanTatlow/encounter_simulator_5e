@@ -2,6 +2,7 @@ use std::cmp;
 
 use crate::{
     attack::weapon::{Weapon, WeaponDamage},
+    character::ability::AbilityModifiers,
     utils::{
         dice::{beats_dc, is_natural_20, Die},
         probability::Meanable,
@@ -20,12 +21,12 @@ pub enum HitResult {
 
 #[derive(Clone)]
 pub struct Attack<T: Rollable<u32> + Meanable> {
-    attack_bonus: i8,
+    attack_bonus: i16,
     damage: Damage<T>,
 }
 
 impl<T: Rollable<u32> + Meanable> Attack<T> {
-    pub fn new(attack_bonus: i8, damage: T, bonus: i8) -> Self {
+    pub fn new(attack_bonus: i16, damage: T, bonus: i16) -> Self {
         Attack {
             attack_bonus,
             damage: Damage::new(damage, bonus),
@@ -79,17 +80,17 @@ impl<T: Rollable<u32> + Meanable> Attack<T> {
     }
 }
 
-fn weapon_ability_modifier(weapon: &Weapon, strength: u8, dex: u8) -> i8 {
+fn weapon_ability_modifier(weapon: &Weapon, ability_modifiers: &AbilityModifiers) -> i16 {
     if weapon.is_finesse() {
-        (dex / 2) as i8 - 5
+        ability_modifiers.dex()
     } else {
-        (strength / 2) as i8 - 5
+        ability_modifiers.str()
     }
 }
 
-fn attack_bonus(weapon: &Weapon, strength: u8, dex: u8, prof: u8) -> i8 {
-    let ability_modifier = weapon_ability_modifier(weapon, strength, dex);
-    prof as i8 + ability_modifier
+fn attack_bonus(weapon: &Weapon, ability_modifiers: &AbilityModifiers, prof: u8) -> i16 {
+    let ability_modifier = weapon_ability_modifier(weapon, ability_modifiers);
+    prof as i16 + ability_modifier
 }
 
 pub(crate) fn from_weapon_and_stats(
@@ -98,10 +99,9 @@ pub(crate) fn from_weapon_and_stats(
 ) -> Attack<WeaponDamage> {
     let attack_bonus = attack_bonus(
         &weapon,
-        stats.strength(),
-        stats.dexterity(),
+        stats.ability_modifiers(),
         stats.proficiency_bonus(),
     );
-    let damage_bonus = weapon_ability_modifier(&weapon, stats.strength(), stats.dexterity());
+    let damage_bonus = weapon_ability_modifier(&weapon, stats.ability_modifiers());
     Attack::new(attack_bonus, WeaponDamage::new(weapon), damage_bonus)
 }

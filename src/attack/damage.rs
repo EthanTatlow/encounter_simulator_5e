@@ -5,11 +5,11 @@ use crate::utils::{probability::Meanable, rollable::Rollable};
 #[derive(Clone)]
 pub struct Damage<T: Rollable<u32> + Meanable> {
     dice: T,
-    bonus: i8,
+    bonus: i16,
 }
 
 impl<T: Rollable<u32> + Meanable> Damage<T> {
-    pub(crate) fn new(dice: T, bonus: i8) -> Damage<T> {
+    pub(crate) fn new(dice: T, bonus: i16) -> Damage<T> {
         Damage { dice, bonus }
     }
 
