@@ -1,32 +1,32 @@
 use std::cmp;
 
-use crate::utils::{probability::Meanable, rollable::Rollable};
+use crate::utils::{dice::Die, probability::mean_sum, rollable::roll_sum};
 
 #[derive(Clone)]
-pub struct Damage<T: Rollable<u32> + Meanable> {
-    dice: T,
-    bonus: i16,
+pub struct Damage {
+    dice: Vec<Die>,
+    modifier: i16,
 }
 
-impl<T: Rollable<u32> + Meanable> Damage<T> {
-    pub(crate) fn new(dice: T, bonus: i16) -> Damage<T> {
-        Damage { dice, bonus }
+impl Damage {
+    pub(crate) fn new(dice: Vec<Die>, modifier: i16) -> Damage {
+        Damage { dice, modifier }
     }
 
     pub fn calculate_regular(&self) -> u16 {
-        let total_dice_roll = self.dice.roll();
-        cmp::max(0, total_dice_roll as i32 + self.bonus as i32) as u16
+        let total_dice_roll = roll_sum(&self.dice);
+        cmp::max(0, total_dice_roll as i32 + self.modifier as i32) as u16
     }
 
     pub fn calculate_crit(&self) -> u16 {
-        self.calculate_regular() + self.dice.roll() as u16
+        self.calculate_regular() + roll_sum(&self.dice) as u16
     }
 
     pub fn mean_on_hit(&self) -> f32 {
-        self.dice.mean() + self.bonus as f32
+        mean_sum(&self.dice) + self.modifier as f32
     }
 
     pub fn mean_on_crit(&self) -> f32 {
-        self.mean_on_hit() + self.dice.mean()
+        self.mean_on_hit() + mean_sum(&self.dice)
     }
 }

@@ -1,7 +1,4 @@
-use crate::{
-    attack::{attack::Attack, save_based::SaveBasedAttack},
-    utils::{probability::Meanable, rollable::Rollable},
-};
+use crate::attack::{attack::Attack, save_based::SaveBasedAttack};
 
 use super::character::Character;
 
@@ -10,7 +7,7 @@ pub trait NegativeEffect {
     fn apply(&self, character: &mut Character);
 }
 
-impl<T: Rollable<u32> + Meanable> NegativeEffect for Attack<T> {
+impl NegativeEffect for Attack {
     fn number_of_targets(&self) -> u8 {
         1
     }
@@ -23,7 +20,7 @@ impl<T: Rollable<u32> + Meanable> NegativeEffect for Attack<T> {
     }
 }
 
-impl<T: Rollable<u32> + Meanable> NegativeEffect for SaveBasedAttack<T> {
+impl NegativeEffect for SaveBasedAttack {
     fn number_of_targets(&self) -> u8 {
         self.nr_targets()
     }

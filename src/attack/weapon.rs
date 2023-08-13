@@ -1,10 +1,6 @@
 // TODO: Weapons should likely be externalised rather than being hard-coded
 
-use crate::utils::{
-    dice::Die,
-    probability::Meanable,
-    rollable::{roll_sum, Rollable},
-};
+use crate::utils::{dice::Die, probability::Meanable};
 
 #[derive(Clone)]
 pub struct Weapon {
@@ -81,27 +77,8 @@ impl Weapon {
     pub fn mean_damage(&self) -> f32 {
         self.damage_dice.iter().map(|x| x.mean()).sum()
     }
-}
 
-#[derive(Clone)]
-pub struct WeaponDamage {
-    weapon: Weapon,
-}
-
-impl WeaponDamage {
-    pub fn new(weapon: Weapon) -> Self {
-        WeaponDamage { weapon }
-    }
-}
-
-impl Rollable<u32> for WeaponDamage {
-    fn roll(&self) -> u32 {
-        roll_sum(&self.weapon.damage_dice)
-    }
-}
-
-impl Meanable for WeaponDamage {
-    fn mean(&self) -> f32 {
-        return self.weapon.mean_damage();
+    pub fn damage_dice(&self) -> &[Die] {
+        self.damage_dice.as_ref()
     }
 }

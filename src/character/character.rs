@@ -5,8 +5,8 @@ use rand::{thread_rng, Rng};
 use crate::attack::{
     attack::{from_weapon_and_stats, Attack},
     save_based::{from_spell_and_stats, SaveBasedAttack},
-    spell::{Spell, SpellDamage},
-    weapon::{WeaponDamage, WeaponType},
+    spell::Spell,
+    weapon::WeaponType,
 };
 
 use super::save::SaveModifiers;
@@ -36,8 +36,8 @@ impl StaticStats {
 
 #[derive(Clone)]
 pub struct Character {
-    weapon_attacks: Vec<Attack<WeaponDamage>>,
-    spell_attacks: Vec<SaveBasedAttack<SpellDamage>>,
+    weapon_attacks: Vec<Attack>,
+    spell_attacks: Vec<SaveBasedAttack>,
     hit_points: u16,
     stats: StaticStats,
 }

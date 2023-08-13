@@ -1,11 +1,10 @@
 use std::cmp;
 
 use crate::{
-    attack::weapon::{Weapon, WeaponDamage},
+    attack::weapon::Weapon,
     character::ability::AbilityModifiers,
     utils::{
         dice::{beats_dc, is_natural_20, Die},
-        probability::Meanable,
         rollable::Rollable,
     },
 };
@@ -20,16 +19,16 @@ pub enum HitResult {
 }
 
 #[derive(Clone)]
-pub struct Attack<T: Rollable<u32> + Meanable> {
+pub struct Attack {
     attack_bonus: i16,
-    damage: Damage<T>,
+    damage: Damage,
 }
 
-impl<T: Rollable<u32> + Meanable> Attack<T> {
-    pub fn new(attack_bonus: i16, damage: T, bonus: i16) -> Self {
+impl Attack {
+    pub fn new(attack_bonus: i16, damage: Damage) -> Self {
         Attack {
             attack_bonus,
-            damage: Damage::new(damage, bonus),
+            damage: damage,
         }
     }
 
@@ -96,12 +95,15 @@ fn attack_bonus(weapon: &Weapon, ability_modifiers: &AbilityModifiers, prof: u8)
 pub(crate) fn from_weapon_and_stats(
     weapon: Weapon,
     stats: &crate::character::character::StaticStats,
-) -> Attack<WeaponDamage> {
+) -> Attack {
     let attack_bonus = attack_bonus(
         &weapon,
         stats.ability_modifiers(),
         stats.proficiency_bonus(),
     );
     let damage_bonus = weapon_ability_modifier(&weapon, stats.ability_modifiers());
-    Attack::new(attack_bonus, WeaponDamage::new(weapon), damage_bonus)
+    Attack::new(
+        attack_bonus,
+        Damage::new(weapon.damage_dice().to_vec(), damage_bonus),
+    )
 }
