@@ -1,7 +1,5 @@
 use std::cmp::min;
 
-use rand::{thread_rng, Rng};
-
 use crate::attack::{
     attack::{from_weapon_and_stats, Attack},
     damage::Damage,
@@ -10,8 +8,8 @@ use crate::attack::{
     weapon::WeaponType,
 };
 
+use super::ability::AbilityModifiers;
 use super::save::SaveModifiers;
-use super::{ability::AbilityModifiers, effect::NegativeEffect};
 
 #[derive(Clone)]
 pub struct StaticStats {
@@ -86,16 +84,12 @@ impl Character {
         }
     }
 
-    pub fn get_effects_on_enemies(&self) -> Vec<Box<dyn NegativeEffect>> {
-        if !self.spell_attacks.is_empty() {
-            let spell_attack =
-                self.spell_attacks[thread_rng().gen_range(0..self.spell_attacks.len())].clone();
-            return vec![Box::new(spell_attack)];
-        }
-        self.weapon_attacks
-            .iter()
-            .map(|atk| Box::new(atk.clone()) as Box<dyn NegativeEffect>)
-            .collect()
+    pub fn get_attacks(&self) -> &Vec<Attack> {
+        &self.weapon_attacks
+    }
+
+    pub fn get_spells(&self) -> &Vec<SaveBasedAttack> {
+        &self.spell_attacks
     }
 
     pub fn ac(&self) -> i16 {

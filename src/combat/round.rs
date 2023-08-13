@@ -1,25 +1,15 @@
-use crate::character::character::Character;
+use super::{
+    action::Action,
+    participant::{ActiveParticipant, Participant},
+};
 
-use super::targeting::select_random_targets;
-
-pub fn run_round(players: &mut [Character], enemies: &mut [Character]) {
+pub fn run_round(players: &mut [Participant], enemies: &mut [Participant]) {
     // simplifying assumption: first players, then enemies. no initiative
-    attack_with_each_attacker(players, enemies);
-    attack_with_each_attacker(enemies, players);
+    take_actions(players, enemies);
+    take_actions(enemies, players);
 }
 
-fn attack_with_each_attacker(attackers: &[Character], targets: &mut [Character]) {
-    attackers
-        .iter()
-        .filter(|c| !c.is_dead())
-        .for_each(|c| attack_targets(c, targets));
-}
-
-fn attack_targets(attacker: &Character, targets: &mut [Character]) {
-    if !targets.is_empty() {
-        attacker.get_effects_on_enemies().iter().for_each(|effect| {
-            let targets = select_random_targets(effect.number_of_targets() as usize, targets);
-            targets.for_each(|target| effect.apply(target));
-        });
-    }
+fn take_actions(attackers: &mut [Participant], targets: &mut [Participant]) {
+    let actions: Vec<Action> = attackers.iter_mut().map(|a| a.take_action()).collect();
+    actions.iter().for_each(|a| a.execute(attackers, targets));
 }

@@ -5,9 +5,13 @@ pub mod utils;
 
 use attack::{spell::Spell, weapon::WeaponType};
 use character::character::Character;
+use combat::participant::{CharacterWithActionQueue, Participant};
 use utils::{dice::Die, save::SaveType};
 
-use crate::{character::ability::AbilityModifiers, combat::round};
+use crate::{
+    character::ability::AbilityModifiers,
+    combat::{participant::Damageable, round},
+};
 
 fn main() {
     let mut group1_wins = 0;
@@ -16,16 +20,16 @@ fn main() {
 
     for _ in 0..repetitions {
         let mut group1 = get_fighters();
-        let mut group2 = get_group_2();
+        let mut group2 = get_casters();
 
         let mut nr_rounds = 0;
         loop {
             nr_rounds += 1;
             round::run_round(&mut group1, &mut group2);
-            if group1.iter().all(|c| c.is_dead()) {
+            if group1.iter().all(|c| !c.is_conscious()) {
                 break;
             }
-            if group2.iter().all(|c| c.is_dead()) {
+            if group2.iter().all(|c| !c.is_conscious()) {
                 group1_wins += 1;
                 break;
             }
@@ -43,7 +47,7 @@ fn main() {
     );
 }
 
-fn get_fighters() -> Vec<Character> {
+fn get_fighters() -> Vec<Participant> {
     (0..20)
         .into_iter()
         .map(|_| {
@@ -54,13 +58,27 @@ fn get_fighters() -> Vec<Character> {
                 9,
             )
         })
+        .map(|c| {
+            let attacks = c.get_attacks().clone();
+            Participant::Character(CharacterWithActionQueue::new(
+                c,
+                combat::action::Action::MultipleAttacks(attacks),
+            ))
+        })
         .collect()
 }
 
-fn get_group_2() -> Vec<Character> {
+fn get_casters() -> Vec<Participant> {
     let spell = Spell::new(SaveType::DEX, true, 3, vec![Die::D6; 3]);
-    (0..15)
+    (0..10)
         .into_iter()
         .map(|_| Character::new_caster(spell.clone(), AbilityModifiers::default(), 15, 9))
+        .map(|c| {
+            let spell = c.get_spells().first().unwrap().clone();
+            Participant::Character(CharacterWithActionQueue::new(
+                c,
+                combat::action::Action::SaveBasedAttack(spell),
+            ))
+        })
         .collect()
 }
