@@ -6,18 +6,26 @@ use crate::utils::{
     save::Save,
 };
 
-use super::{damage::Damage, spell::Spell};
+use super::{
+    damage::{Damage, DamageRoll},
+    spell::Spell,
+};
 
 #[derive(Clone)]
 pub struct SaveBasedAttack {
     save: Save,
     nr_targets: u8,
     half_on_success: bool,
-    damage: Damage,
+    damage: DamageRoll,
 }
 
 impl SaveBasedAttack {
-    fn new(save: Save, nr_targets: u8, half_on_success: bool, damage: Damage) -> SaveBasedAttack {
+    fn new(
+        save: Save,
+        nr_targets: u8,
+        half_on_success: bool,
+        damage: DamageRoll,
+    ) -> SaveBasedAttack {
         Self {
             save,
             nr_targets,
@@ -26,16 +34,16 @@ impl SaveBasedAttack {
         }
     }
 
-    pub fn roll_save(&self, save_bonus: i16) -> u16 {
+    pub fn roll_save(&self, save_bonus: i16) -> Damage {
         let roll = Die::D20.roll();
         let take_full_damage = !beats_dc(roll as i16, self.save.dc() as i16 - save_bonus);
 
         if take_full_damage {
             self.damage.calculate_regular()
         } else if self.half_on_success {
-            self.damage.calculate_regular() / 2
+            self.damage.calculate_regular().half()
         } else {
-            0
+            Damage::NONE
         }
     }
 
@@ -59,6 +67,6 @@ pub fn from_spell_and_stats(
         Save::new(spell.save_type().clone(), dc),
         spell.nr_targets(),
         spell.half_on_success(),
-        Damage::new(spell.damage_dice(), 0),
+        DamageRoll::new(spell.damage_dice(), 0),
     )
 }

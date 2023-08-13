@@ -4,6 +4,7 @@ use rand::{thread_rng, Rng};
 
 use crate::attack::{
     attack::{from_weapon_and_stats, Attack},
+    damage::Damage,
     save_based::{from_spell_and_stats, SaveBasedAttack},
     spell::Spell,
     weapon::WeaponType,
@@ -38,7 +39,7 @@ impl StaticStats {
 pub struct Character {
     weapon_attacks: Vec<Attack>,
     spell_attacks: Vec<SaveBasedAttack>,
-    hit_points: u16,
+    hit_points: u32,
     stats: StaticStats,
 }
 
@@ -47,7 +48,7 @@ impl Character {
         weapon_type: WeaponType,
         ability_modifiers: AbilityModifiers,
         ac: i16,
-        hit_points: u16,
+        hit_points: u32,
     ) -> Self {
         let stats = StaticStats {
             ac,
@@ -64,11 +65,11 @@ impl Character {
         }
     }
 
-    pub fn new_wiz(
+    pub fn new_caster(
         spell: Spell,
         ability_modifiers: AbilityModifiers,
         ac: i16,
-        hit_points: u16,
+        hit_points: u32,
     ) -> Self {
         let stats = StaticStats {
             ac,
@@ -101,8 +102,8 @@ impl Character {
         return self.stats.ac;
     }
 
-    pub(crate) fn take_damage(&mut self, total_damage: u16) {
-        self.hit_points -= min(total_damage, self.hit_points)
+    pub(crate) fn take_damage(&mut self, damage: Damage) {
+        self.hit_points -= min(damage.amount(), self.hit_points)
     }
 
     pub(crate) fn is_dead(&self) -> bool {

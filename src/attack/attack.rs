@@ -1,5 +1,3 @@
-use std::cmp;
-
 use crate::{
     attack::weapon::Weapon,
     character::ability::AbilityModifiers,
@@ -9,7 +7,7 @@ use crate::{
     },
 };
 
-use super::damage::Damage;
+use super::damage::{Damage, DamageRoll};
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum HitResult {
@@ -21,11 +19,11 @@ pub enum HitResult {
 #[derive(Clone)]
 pub struct Attack {
     attack_bonus: i16,
-    damage: Damage,
+    damage: DamageRoll,
 }
 
 impl Attack {
-    pub fn new(attack_bonus: i16, damage: Damage) -> Self {
+    pub fn new(attack_bonus: i16, damage: DamageRoll) -> Self {
         Attack {
             attack_bonus,
             damage: damage,
@@ -46,34 +44,15 @@ impl Attack {
         }
     }
 
-    pub fn calculate_damage(&self, hit_result: HitResult) -> u16 {
+    pub fn calculate_damage(&self, hit_result: HitResult) -> Damage {
         match hit_result {
-            HitResult::Miss => 0,
+            HitResult::Miss => Damage::NONE,
             HitResult::Hit => self.damage.calculate_regular(),
             HitResult::Critical => self.damage.calculate_crit(),
         }
     }
 
-    pub fn mean_damage_against_ac(&self, enemy_armor_class: i16) -> f32 {
-        let effective_ac = enemy_armor_class - self.attack_bonus as i16;
-        let reg_hit_prob = if effective_ac >= 20 {
-            0.0
-        } else {
-            cmp::min(20 - effective_ac - 1, 18) as f32 * 0.05 // note: subtract 1 to account for fumble
-        };
-
-        reg_hit_prob * self.mean_damage_on_hit() + 0.05 * self.mean_damage_on_crit()
-    }
-
-    fn mean_damage_on_hit(&self) -> f32 {
-        self.damage.mean_on_hit()
-    }
-
-    fn mean_damage_on_crit(&self) -> f32 {
-        self.damage.mean_on_hit()
-    }
-
-    pub(crate) fn roll_attack_with_damage(&self, ac: i16) -> u16 {
+    pub(crate) fn roll_attack_with_damage(&self, ac: i16) -> Damage {
         let hit_result = self.roll_attack(ac);
         self.calculate_damage(hit_result)
     }
@@ -104,6 +83,6 @@ pub(crate) fn from_weapon_and_stats(
     let damage_bonus = weapon_ability_modifier(&weapon, stats.ability_modifiers());
     Attack::new(
         attack_bonus,
-        Damage::new(weapon.damage_dice().to_vec(), damage_bonus),
+        DamageRoll::new(weapon.damage_dice().to_vec(), damage_bonus),
     )
 }

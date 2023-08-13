@@ -61,6 +61,6 @@ fn get_group_2() -> Vec<Character> {
     let spell = Spell::new(SaveType::DEX, true, 3, vec![Die::D6; 3]);
     (0..15)
         .into_iter()
-        .map(|_| Character::new_wiz(spell.clone(), AbilityModifiers::default(), 15, 9))
+        .map(|_| Character::new_caster(spell.clone(), AbilityModifiers::default(), 15, 9))
         .collect()
 }

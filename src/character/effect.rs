@@ -13,9 +13,9 @@ impl NegativeEffect for Attack {
     }
 
     fn apply(&self, character: &mut Character) {
-        let damage_dealt = self.roll_attack_with_damage(character.ac());
-        if damage_dealt > 0 {
-            character.take_damage(damage_dealt)
+        let damage = self.roll_attack_with_damage(character.ac());
+        if damage.amount() > 0 {
+            character.take_damage(damage)
         }
     }
 }
@@ -26,10 +26,10 @@ impl NegativeEffect for SaveBasedAttack {
     }
 
     fn apply(&self, character: &mut Character) {
-        let save_bonus = character.saves().modifier(self.save().save_type());
-        let damage_dealt = self.roll_save(save_bonus);
-        if damage_dealt > 0 {
-            character.take_damage(damage_dealt)
+        let save_modifier: i16 = character.saves().modifier(self.save().save_type());
+        let damage = self.roll_save(save_modifier);
+        if damage.amount() > 0 {
+            character.take_damage(damage)
         }
     }
 }

@@ -1,32 +1,48 @@
 use std::cmp;
 
-use crate::utils::{dice::Die, probability::mean_sum, rollable::roll_sum};
+use crate::utils::{dice::Die, rollable::roll_sum};
 
 #[derive(Clone)]
-pub struct Damage {
+pub struct DamageRoll {
     dice: Vec<Die>,
     modifier: i16,
 }
 
+pub struct Damage {
+    amount: u32,
+}
+
 impl Damage {
-    pub(crate) fn new(dice: Vec<Die>, modifier: i16) -> Damage {
-        Damage { dice, modifier }
+    pub const NONE: Self = Self { amount: 0 };
+    pub fn half(self) -> Self {
+        Self {
+            amount: self.amount / 2,
+            ..self
+        }
     }
 
-    pub fn calculate_regular(&self) -> u16 {
+    pub fn amount(&self) -> u32 {
+        self.amount
+    }
+}
+
+impl DamageRoll {
+    pub fn new(dice: Vec<Die>, modifier: i16) -> DamageRoll {
+        DamageRoll { dice, modifier }
+    }
+
+    pub fn calculate_regular(&self) -> Damage {
         let total_dice_roll = roll_sum(&self.dice);
-        cmp::max(0, total_dice_roll as i32 + self.modifier as i32) as u16
+        Damage {
+            amount: cmp::max(0, total_dice_roll as i64 + self.modifier as i64) as u32,
+        }
     }
 
-    pub fn calculate_crit(&self) -> u16 {
-        self.calculate_regular() + roll_sum(&self.dice) as u16
-    }
-
-    pub fn mean_on_hit(&self) -> f32 {
-        mean_sum(&self.dice) + self.modifier as f32
-    }
-
-    pub fn mean_on_crit(&self) -> f32 {
-        self.mean_on_hit() + mean_sum(&self.dice)
+    pub fn calculate_crit(&self) -> Damage {
+        let regular_damage = self.calculate_regular();
+        Damage {
+            amount: regular_damage.amount + roll_sum(&self.dice),
+            ..regular_damage
+        }
     }
 }
