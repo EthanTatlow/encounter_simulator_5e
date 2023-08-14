@@ -1,4 +1,9 @@
-use crate::utils::{dice::Die, save::SaveType};
+use crate::utils::{
+    dice::Die,
+    save::{Save, SaveType},
+};
+
+use super::{damage::DamageRoll, save_based::SaveBasedAttack};
 
 #[derive(Clone)]
 pub struct Spell {
@@ -37,5 +42,14 @@ impl Spell {
 
     pub fn damage_dice(&self) -> Vec<Die> {
         self.damage_dice.clone()
+    }
+
+    pub fn to_spell_based_attack(self, dc: i16) -> SaveBasedAttack {
+        SaveBasedAttack::new(
+            Save::new(self.save_type, dc),
+            self.nr_targets,
+            self.half_on_success,
+            DamageRoll::new(self.damage_dice, 0),
+        )
     }
 }

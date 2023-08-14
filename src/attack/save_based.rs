@@ -20,7 +20,7 @@ pub struct SaveBasedAttack {
 }
 
 impl SaveBasedAttack {
-    fn new(
+    pub fn new(
         save: Save,
         nr_targets: u8,
         half_on_success: bool,

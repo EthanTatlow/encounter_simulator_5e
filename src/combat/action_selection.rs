@@ -11,8 +11,17 @@ pub trait UpdateReceiver {
 
 #[derive(Clone)]
 pub struct Recharge {
-    min_roll: u32,
+    min_roll: u8,
     can_use: bool,
+}
+
+impl Recharge {
+    fn new(min_roll: u8) -> Self {
+        Self {
+            min_roll,
+            can_use: true,
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -32,7 +41,7 @@ impl ActionState {
     fn on_turn_start(&mut self) {
         match self {
             ActionState::Recharge(recharge) => {
-                recharge.can_use = recharge.can_use || Die::D6.roll() > recharge.min_roll
+                recharge.can_use = recharge.can_use || Die::D6.roll() > recharge.min_roll as u32
             }
             _ => (),
         }
@@ -83,6 +92,13 @@ impl StatefulAction {
         Self {
             action,
             state: ActionState::Charges(charges),
+        }
+    }
+
+    pub fn new_recharge(action: Action, min: u8) -> Self {
+        Self {
+            action,
+            state: ActionState::Recharge(Recharge::new(min)),
         }
     }
 

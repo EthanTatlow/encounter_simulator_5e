@@ -4,26 +4,29 @@ pub mod combat;
 pub mod utils;
 
 use attack::{attack::Attack, damage::DamageRoll, spell::Spell, weapon::WeaponType};
-use character::character::Character;
+use character::{character::Character, save::SaveModifiers};
 use combat::{
     action_selection::{ActionSelection, StatefulAction},
-    participant::{CharacterWithActionQueue, Participant},
+    participant::Participant,
 };
 use utils::{dice::Die, save::SaveType};
 
 use crate::{
     character::ability::AbilityModifiers,
-    combat::{participant::Damageable, round},
+    combat::{action::Action, participant::Damageable, round},
 };
 
 fn main() {
+    use std::time::Instant;
+    let now = Instant::now();
+
     let mut group1_wins = 0;
     let mut nr_rounds_sum = 0;
     let repetitions = 1000;
 
     for _ in 0..repetitions {
         let mut group1 = get_fighters();
-        let mut group2 = get_casters();
+        let mut group2 = get_dragon();
 
         let mut nr_rounds = 0;
         loop {
@@ -48,17 +51,20 @@ fn main() {
         "Average number of rounds: {}",
         nr_rounds_sum as f32 / repetitions as f32
     );
+
+    let elapsed = now.elapsed();
+    println!("Program duration: {:.2?}", elapsed);
 }
 
 fn get_fighters() -> Vec<Participant> {
-    (0..9)
+    (0..5)
         .into_iter()
         .map(|_| {
             Character::new(
                 WeaponType::Longsword,
-                AbilityModifiers::new(2, 0, 0, 0, 0, 0),
-                14,
-                3,
+                AbilityModifiers::new(10, 10, 0, 0, 0, 0),
+                18,
+                120,
             )
         })
         .map(|c| {
@@ -71,27 +77,20 @@ fn get_fighters() -> Vec<Participant> {
         .collect()
 }
 
-fn get_casters() -> Vec<Participant> {
-    let firebolt = Attack::new(5, DamageRoll::new(vec![Die::D10], 0));
-    let spell = Spell::new(SaveType::DEX, true, 3, vec![Die::D6; 3]);
-    (0..1)
-        .into_iter()
-        .map(|_| Character::new_caster(spell.clone(), AbilityModifiers::default(), 16, 70))
-        .map(|c| {
-            let spell = c.get_spells().first().unwrap().clone();
-            Participant::Character(
-                c,
-                ActionSelection::new(
-                    combat::action::Action::MultipleAttacks(vec![
-                        firebolt.clone(),
-                        firebolt.clone(),
-                    ]),
-                    vec![StatefulAction::new_with_charges(
-                        combat::action::Action::SaveBasedAttack(spell),
-                        3,
-                    )],
-                ),
-            )
-        })
-        .collect()
+fn get_dragon() -> Vec<Participant> {
+    let bite = Attack::new(15, DamageRoll::new(vec![Die::D10; 2], 8));
+    let claws = Attack::new(15, DamageRoll::new(vec![Die::D6; 2], 8));
+    let breath_weapon = Spell::new(SaveType::DEX, true, 3, vec![Die::D8; 15]);
+    let action_selection = ActionSelection::new(
+        Action::MultipleAttacks(vec![bite, claws.clone(), claws]),
+        vec![StatefulAction::new_recharge(
+            Action::SaveBasedAttack(breath_weapon.to_spell_based_attack(22)),
+            5,
+        )],
+    );
+
+    let saves = SaveModifiers::new(8, 9, 14, 3, 9, 11);
+    let dragon = Participant::new_simple(367, 22, saves, action_selection);
+
+    vec![dragon]
 }
