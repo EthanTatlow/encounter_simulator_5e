@@ -3,9 +3,12 @@ pub mod character;
 pub mod combat;
 pub mod utils;
 
-use attack::{spell::Spell, weapon::WeaponType};
+use attack::{attack::Attack, damage::DamageRoll, spell::Spell, weapon::WeaponType};
 use character::character::Character;
-use combat::participant::{CharacterWithActionQueue, Participant};
+use combat::{
+    action_selection::{ActionSelection, StatefulAction},
+    participant::{CharacterWithActionQueue, Participant},
+};
 use utils::{dice::Die, save::SaveType};
 
 use crate::{
@@ -48,37 +51,47 @@ fn main() {
 }
 
 fn get_fighters() -> Vec<Participant> {
-    (0..20)
+    (0..9)
         .into_iter()
         .map(|_| {
             Character::new(
-                WeaponType::Shortsword,
-                AbilityModifiers::new(4, 4, 0, 0, 0, 0),
+                WeaponType::Longsword,
+                AbilityModifiers::new(2, 0, 0, 0, 0, 0),
                 14,
-                9,
+                3,
             )
         })
         .map(|c| {
             let attacks = c.get_attacks().clone();
-            Participant::Character(CharacterWithActionQueue::new(
+            Participant::Character(
                 c,
-                combat::action::Action::MultipleAttacks(attacks),
-            ))
+                ActionSelection::new_default_only(combat::action::Action::MultipleAttacks(attacks)),
+            )
         })
         .collect()
 }
 
 fn get_casters() -> Vec<Participant> {
+    let firebolt = Attack::new(5, DamageRoll::new(vec![Die::D10], 0));
     let spell = Spell::new(SaveType::DEX, true, 3, vec![Die::D6; 3]);
-    (0..10)
+    (0..1)
         .into_iter()
-        .map(|_| Character::new_caster(spell.clone(), AbilityModifiers::default(), 15, 9))
+        .map(|_| Character::new_caster(spell.clone(), AbilityModifiers::default(), 16, 70))
         .map(|c| {
             let spell = c.get_spells().first().unwrap().clone();
-            Participant::Character(CharacterWithActionQueue::new(
+            Participant::Character(
                 c,
-                combat::action::Action::SaveBasedAttack(spell),
-            ))
+                ActionSelection::new(
+                    combat::action::Action::MultipleAttacks(vec![
+                        firebolt.clone(),
+                        firebolt.clone(),
+                    ]),
+                    vec![StatefulAction::new_with_charges(
+                        combat::action::Action::SaveBasedAttack(spell),
+                        3,
+                    )],
+                ),
+            )
         })
         .collect()
 }

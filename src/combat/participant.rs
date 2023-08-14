@@ -5,29 +5,17 @@ use crate::{
     character::{character::Character, save::SaveModifiers},
 };
 
-use super::action::Action;
+use super::{action::Action, action_selection::ActionSelection};
 
 #[derive(Clone)]
 pub struct CharacterWithActionQueue {
     character: Character,
-    action_queue: ActionQueue,
-}
-
-impl CharacterWithActionQueue {
-    pub fn new(character: Character, default_action: Action) -> Self {
-        Self {
-            character,
-            action_queue: ActionQueue {
-                default: default_action,
-                next_actions: VecDeque::<Action>::new(),
-            },
-        }
-    }
+    action_queue: ActionSelection,
 }
 
 #[derive(Clone)]
 pub enum Participant {
-    Character(CharacterWithActionQueue),
+    Character(Character, ActionSelection),
 }
 
 pub trait Damageable {
@@ -40,25 +28,25 @@ pub trait Damageable {
 impl Damageable for Participant {
     fn is_conscious(&self) -> bool {
         match self {
-            Participant::Character(character) => !character.character.is_dead(),
+            Participant::Character(character, _) => !character.is_dead(),
         }
     }
 
     fn take_damage(&mut self, damage: Damage) {
         match self {
-            Participant::Character(character) => character.character.take_damage(damage),
+            Participant::Character(character, _) => character.take_damage(damage),
         }
     }
 
     fn ac(&self) -> i16 {
         match self {
-            Participant::Character(character) => character.character.ac(),
+            Participant::Character(character, _) => character.ac(),
         }
     }
 
     fn saves(&self) -> &SaveModifiers {
         match self {
-            Participant::Character(character) => character.character.saves(),
+            Participant::Character(character, _) => character.saves(),
         }
     }
 }
@@ -70,26 +58,7 @@ pub trait ActiveParticipant {
 impl ActiveParticipant for Participant {
     fn take_action(&mut self) -> Action {
         match self {
-            Participant::Character(character) => character.action_queue.pop(),
-        }
-    }
-}
-
-#[derive(Clone)]
-pub struct ActionQueue {
-    default: Action,
-    next_actions: VecDeque<Action>,
-}
-
-impl ActionQueue {
-    fn push(&mut self, action: Action) {
-        self.next_actions.push_front(action);
-    }
-
-    fn pop(&mut self) -> Action {
-        match self.next_actions.pop_back() {
-            Some(action) => action,
-            None => self.default.clone(),
+            Participant::Character(_, actions) => actions.update_and_select(),
         }
     }
 }
