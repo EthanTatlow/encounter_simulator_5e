@@ -1,8 +1,5 @@
-use std::cmp::min;
-
 use crate::attack::{
     attack::{from_weapon_and_stats, Attack},
-    damage::Damage,
     save_based::{from_spell_and_stats, SaveBasedAttack},
     spell::Spell,
     weapon::WeaponType,
@@ -93,15 +90,11 @@ impl Character {
     }
 
     pub fn ac(&self) -> i16 {
-        return self.stats.ac;
+        self.stats.ac
     }
 
-    pub(crate) fn take_damage(&mut self, damage: Damage) {
-        self.hit_points -= min(damage.amount(), self.hit_points)
-    }
-
-    pub(crate) fn is_dead(&self) -> bool {
-        return self.hit_points == 0;
+    pub fn hp(&self) -> u32 {
+        self.hit_points
     }
 
     pub fn saves(&self) -> &SaveModifiers {

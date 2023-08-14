@@ -22,7 +22,7 @@ fn main() {
 
     let mut group1_wins = 0;
     let mut nr_rounds_sum = 0;
-    let repetitions = 1000;
+    let repetitions = 10000;
 
     for _ in 0..repetitions {
         let mut group1 = get_fighters();
@@ -69,9 +69,9 @@ fn get_fighters() -> Vec<Participant> {
         })
         .map(|c| {
             let attacks = c.get_attacks().clone();
-            Participant::Character(
+            Participant::new_from_character(
                 c,
-                ActionSelection::new_default_only(combat::action::Action::MultipleAttacks(attacks)),
+                ActionSelection::new_default_only(combat::action::Action::MultiAttack(attacks)),
             )
         })
         .collect()
@@ -80,9 +80,16 @@ fn get_fighters() -> Vec<Participant> {
 fn get_dragon() -> Vec<Participant> {
     let bite = Attack::new(15, DamageRoll::new(vec![Die::D10; 2], 8));
     let claws = Attack::new(15, DamageRoll::new(vec![Die::D6; 2], 8));
+    // TODO: damage type
     let breath_weapon = Spell::new(SaveType::DEX, true, 3, vec![Die::D8; 15]);
+    // TODO: negative effects (e.g. frightened)
+    let frightening_presence = Spell::new(SaveType::WIS, false, 100, vec![]);
+
     let action_selection = ActionSelection::new(
-        Action::MultipleAttacks(vec![bite, claws.clone(), claws]),
+        Action::MultiAction(vec![
+            Action::SaveBasedAttack(frightening_presence.to_spell_based_attack(19)),
+            Action::MultiAttack(vec![bite, claws.clone(), claws]),
+        ]),
         vec![StatefulAction::new_recharge(
             Action::SaveBasedAttack(breath_weapon.to_spell_based_attack(22)),
             5,
@@ -90,7 +97,7 @@ fn get_dragon() -> Vec<Participant> {
     );
 
     let saves = SaveModifiers::new(8, 9, 14, 3, 9, 11);
-    let dragon = Participant::new_simple(367, 22, saves, action_selection);
+    let dragon = Participant::new(367, 22, saves, action_selection);
 
     vec![dragon]
 }
