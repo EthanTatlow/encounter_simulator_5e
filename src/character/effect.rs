@@ -4,12 +4,12 @@ use crate::{
 };
 
 pub trait NegativeEffect {
-    fn number_of_targets(&self) -> u8;
+    fn number_of_targets(&self) -> usize;
     fn apply<T: Damageable>(&self, target: &mut T);
 }
 
 impl NegativeEffect for Attack {
-    fn number_of_targets(&self) -> u8 {
+    fn number_of_targets(&self) -> usize {
         1
     }
 
@@ -22,7 +22,7 @@ impl NegativeEffect for Attack {
 }
 
 impl NegativeEffect for SaveBasedAttack {
-    fn number_of_targets(&self) -> u8 {
+    fn number_of_targets(&self) -> usize {
         self.nr_targets()
     }
 

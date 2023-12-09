@@ -14,7 +14,7 @@ use super::{
 #[derive(Clone)]
 pub struct SaveBasedAttack {
     save: Save,
-    nr_targets: u8,
+    nr_targets: usize,
     half_on_success: bool,
     damage: DamageRoll,
 }
@@ -22,7 +22,7 @@ pub struct SaveBasedAttack {
 impl SaveBasedAttack {
     pub fn new(
         save: Save,
-        nr_targets: u8,
+        nr_targets: usize,
         half_on_success: bool,
         damage: DamageRoll,
     ) -> SaveBasedAttack {
@@ -51,7 +51,7 @@ impl SaveBasedAttack {
         &self.save
     }
 
-    pub fn nr_targets(&self) -> u8 {
+    pub fn nr_targets(&self) -> usize {
         self.nr_targets
     }
 }

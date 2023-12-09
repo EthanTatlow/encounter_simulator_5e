@@ -9,15 +9,16 @@ use super::{damage::DamageRoll, save_based::SaveBasedAttack};
 pub struct Spell {
     save_type: SaveType,
     half_on_success: bool,
-    nr_targets: u8,
+    nr_targets: usize,
     damage_dice: Vec<Die>, // todo: damage type, targets, etc.
+    modifier: i16,
 }
 
 impl Spell {
     pub fn new(
         save_type: SaveType,
         half_on_success: bool,
-        nr_targets: u8,
+        nr_targets: usize,
         damage_dice: Vec<Die>,
     ) -> Spell {
         Self {
@@ -25,14 +26,30 @@ impl Spell {
             half_on_success,
             nr_targets,
             damage_dice,
+            modifier: 0,
         }
     }
 
+    pub fn new_with_mod(
+        save_type: SaveType,
+        half_on_success: bool,
+        nr_targets: usize,
+        damage_dice: Vec<Die>,
+        modifier: i16,
+    ) -> Spell {
+        Self {
+            save_type,
+            half_on_success,
+            nr_targets,
+            damage_dice,
+            modifier,
+        }
+    }
     pub fn save_type(&self) -> &SaveType {
         &self.save_type
     }
 
-    pub fn nr_targets(&self) -> u8 {
+    pub fn nr_targets(&self) -> usize {
         self.nr_targets
     }
 
@@ -49,7 +66,7 @@ impl Spell {
             Save::new(self.save_type, dc),
             self.nr_targets,
             self.half_on_success,
-            DamageRoll::new(self.damage_dice, 0),
+            DamageRoll::new(self.damage_dice, self.modifier),
         )
     }
 }
