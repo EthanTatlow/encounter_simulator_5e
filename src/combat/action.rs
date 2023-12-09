@@ -3,7 +3,7 @@ use crate::attack::{attack::Attack, save_based::SaveBasedAttack};
 use crate::character::effect::NegativeEffect;
 
 use super::participant::Participant;
-use super::targeting::{select_random_target, select_random_targets};
+use super::targeting::{target_selection_strategy, TargetSelectionStrategy};
 
 #[derive(Clone)]
 pub enum Action {
@@ -26,8 +26,10 @@ impl Action {
     }
 }
 
+// TODO: target selection strategy configurable
 fn select_target_and_attack(atk: &Attack, enemies: &mut [Participant]) {
-    if let Some(target) = select_random_target(enemies) {
+    let strategy = target_selection_strategy();
+    if let Some(target) = strategy.select_single_target(enemies) {
         atk.apply(target);
     }
 }
@@ -38,6 +40,7 @@ fn execute_attacks(atks: &Vec<Attack>, enemies: &mut [Participant]) {
 }
 
 fn execute_save_based_attack(atk: &SaveBasedAttack, enemies: &mut [Participant]) {
-    let targets_iter = select_random_targets(atk.nr_targets() as usize, enemies);
+    let strategy = target_selection_strategy();
+    let targets_iter = strategy.select_multiple_targets(enemies, atk.nr_targets() as usize);
     targets_iter.for_each(|enemy| atk.apply(enemy));
 }

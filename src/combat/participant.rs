@@ -36,6 +36,10 @@ impl Participant {
             action_selection,
         }
     }
+
+    pub fn hp(&self) -> u32 {
+        self.stats.hp
+    }
 }
 
 pub trait Damageable {
