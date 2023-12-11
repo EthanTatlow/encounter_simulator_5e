@@ -1,8 +1,10 @@
+use std::str::FromStr;
+
 use rand::Rng;
 
 use super::rollable::Rollable;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum Die {
     D2,
     D4,

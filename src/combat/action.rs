@@ -3,9 +3,9 @@ use crate::attack::{attack::Attack, save_based::SaveBasedAttack};
 use crate::character::effect::NegativeEffect;
 
 use super::participant::Participant;
-use super::targeting::{target_selection_strategy, TargetSelectionStrategy};
+use super::targeting::target_selection_strategy;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub enum Action {
     MultiAction(Vec<Action>),
     SingleAttack(Attack),

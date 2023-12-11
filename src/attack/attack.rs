@@ -16,7 +16,7 @@ pub enum HitResult {
     Critical,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Attack {
     attack_bonus: i16,
     damage: DamageRoll,

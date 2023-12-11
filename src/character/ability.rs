@@ -1,4 +1,4 @@
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct AbilityModifiers {
     str: i16,
     dex: i16,

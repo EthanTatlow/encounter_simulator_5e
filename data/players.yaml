@@ -1,0 +1,159 @@
+- name: julius
+  hp: 89
+  ac: 21
+  saves:
+    str: 0
+    dex: 9
+    con: 1
+    int: 1
+    wis: -1
+    cha: 10
+  actions:
+    default:
+      !MultiAction
+      - &eldritch_blast !Attack
+        name: eldritch blast
+        atk: 10
+        dmg: 1d10+5
+      - *eldritch_blast
+      - *eldritch_blast
+    special:
+      # TODO: charges
+      - recharge: 1
+        action:
+          !SaveBasedAttack
+          name: Synaptic Static
+          save_dc: 18
+          save_type: !WIS
+          targets: 8
+          damage: 6d6
+          half_on_success: true
+
+- name: rittersporn
+  hp: 75
+  ac: 16
+  saves:
+    str: 0
+    dex: 9
+    con: 1
+    int: 1
+    wis: -1
+    cha: 10
+  actions:
+    default:
+      !SaveBasedAttack
+      name: Vicious Mockery
+      save_dc: 18
+      save_type: !DEX
+      targets: 3
+      damage: 3d4
+      half_on_success: false
+    special:
+      - # TODO: charges: 3
+        recharge: 2
+        action:
+          !SaveBasedAttack
+          half_on_success: true
+          name: Lightning Bolt
+          save_dc: 18
+          save_type: !DEX
+          targets: 8
+          damage: 6d6
+
+- name: olaf
+  hp: 298
+  ac: 17
+  saves:
+    str: 10
+    dex: 2
+    con: 8
+    int: 1
+    wis: -1
+    cha: 0
+  actions:
+    default:
+      !MultiAction
+      - &greataxe !Attack
+        name: greataxe
+        atk: 10
+        dmg: 1d4+5
+      - *greataxe
+    special: []
+
+- name: adran
+  hp: 120
+  ac: 17
+  saves:
+    str: 0
+    dex: 3
+    con: 9
+    int: 4
+    wis: 2
+    cha: 10
+  actions:
+    default:
+      !Attack
+      name: fire bolt
+      atk: 9
+      dmg: 3d10+4
+    special:
+      - # TODO: charges: 2
+        recharge: 3
+        action:
+          !SaveBasedAttack
+          name: disintegrate
+          half_on_success: false
+          save_dc: 17
+          save_type: !DEX
+          targets: 10
+          damage: 10d6
+      - # TODO charges: 5
+        recharge: 1
+        action:
+          !SaveBasedAttack
+          name: blight
+          half_on_success: true
+          save_dc: 17
+          save_type: !CON
+          targets: 8
+          damage: 8d8
+
+- name: tarik
+  hp: 157
+  ac: 18
+  saves:
+    str: 0
+    dex: 3
+    con: 9
+    int: 4
+    wis: 2
+    cha: 10
+  actions:
+    default:
+      !MultiAction
+      # TODO: fix; also: mixed dice in damage
+      - !Attack
+        name: dagger shocking
+        atk: 10
+        dmg: 1d4+5
+      - !Attack
+        name: dagger shocking (sneak attack)
+        atk: 10
+        dmg: 2d8+5
+      - !Attack
+        name: dagger shocking (sneak attack)
+        atk: 10
+        dmg: 2d6+5
+      - !Attack
+        name: dancing blade
+        atk: 11
+        dmg: 1d8+6
+      - !Attack
+        name: dancing blade (sneak attack)
+        atk: 11
+        dmg: 2d6+6
+      - !Attack
+        name: dancing blade (sneak attack)
+        atk: 11
+        dmg: 2d6+6
+    special: []

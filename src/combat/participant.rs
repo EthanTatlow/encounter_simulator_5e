@@ -7,12 +7,14 @@ use crate::{
 
 use super::{action::Action, action_selection::ActionSelection};
 
+#[derive(Clone, Debug)]
 pub struct Stats {
     hp: u32,
     ac: i16,
     saves: SaveModifiers,
 }
 
+#[derive(Clone, Debug)]
 pub struct Participant {
     stats: Stats,
     action_selection: ActionSelection,

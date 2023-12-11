@@ -1,4 +1,6 @@
-#[derive(Clone)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum SaveType {
     STR,
     DEX,
@@ -8,7 +10,7 @@ pub enum SaveType {
     CHA,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Save {
     save_type: SaveType,
     dc: i16,

@@ -11,7 +11,7 @@ use super::{
     spell::Spell,
 };
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SaveBasedAttack {
     save: Save,
     nr_targets: usize,

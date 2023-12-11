@@ -2,7 +2,7 @@ use crate::utils::save::SaveType;
 
 use super::ability::AbilityModifiers;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SaveModifiers {
     modifiers: AbilityModifiers,
 }

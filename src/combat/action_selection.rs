@@ -9,7 +9,7 @@ pub trait UpdateReceiver {
     fn on_use(&mut self);
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Recharge {
     min_roll: u8,
     can_use: bool,
@@ -24,7 +24,7 @@ impl Recharge {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum ActionState {
     Charges(u8),
     Recharge(Recharge),
@@ -55,7 +55,7 @@ impl ActionState {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ActionSelection {
     default: Action,
     actions: Vec<StatefulAction>,
@@ -81,7 +81,7 @@ impl ActionSelection {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct StatefulAction {
     action: Action,
     state: ActionState,
