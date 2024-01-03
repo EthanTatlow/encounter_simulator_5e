@@ -1,5 +1,3 @@
-use std::str::FromStr;
-
 use rand::Rng;
 
 use super::rollable::Rollable;

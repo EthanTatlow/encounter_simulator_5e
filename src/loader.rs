@@ -17,7 +17,7 @@ pub fn load_participants_from_file(file_path: &Path) -> Vec<Participant> {
         fs::read_to_string(file_path).expect(format!("{file_path:?} not found").as_str());
     let values: Vec<ParticipantConfig> = serde_yaml::from_str(contents.as_str())
         .expect(format!("Unable to parse {file_path:?}").as_str());
-    print!("Enemies loaded: {values:#?}");
+    println!("Participants loaded:\n{values:#?}\n");
 
     values.into_iter().map(|e| e.into()).collect()
 }

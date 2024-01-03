@@ -1,64 +1,50 @@
-pub mod attack;
-pub mod character;
-pub mod combat;
-pub mod loader;
-pub mod utils;
+mod attack;
+mod character;
+mod combat;
+mod loader;
+mod stats;
+mod utils;
 
 use std::path::Path;
 
-use combat::participant::Participant;
+use combat::encounter::Encounter;
 use loader::load_participants_from_file;
 
-use crate::combat::{participant::Damageable, round};
+use clap::Parser;
+
+/// Combat encounter simulator for DnD 5e to simulate
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    /// Number of times to repeat the simulation
+    #[arg(short, long, default_value_t = 10000)]
+    repetitions: usize,
+    /// Path to file containing enemies
+    #[arg(short, long, default_value = "data/enemies.yaml")]
+    enemies_yaml_path: String,
+    /// Path to file containing players
+    #[arg(short, long, default_value = "data/players.yaml")]
+    players_yaml_path: String,
+}
+
+impl Args {
+    fn load_encounter(&self) -> Encounter {
+        let players = load_participants_from_file(Path::new(self.players_yaml_path.as_str()));
+        let enemies = load_participants_from_file(Path::new(self.enemies_yaml_path.as_str()));
+
+        Encounter::new(players, enemies)
+    }
+}
 
 fn main() {
-    let repetitions = 10000;
-
-    use std::time::Instant;
-    let now = Instant::now();
-
-    let mut players_win_count = 0;
-    let mut nr_rounds_sum = 0;
-
-    let players_orig = get_players();
-    let enemies_orig = get_enemies();
+    let mut stats = stats::Stats::new();
+    let args = Args::parse();
+    let repetitions = args.repetitions;
+    let encounter = args.load_encounter();
 
     for _ in 0..repetitions {
-        let mut players = players_orig.to_vec();
-        let mut enemies = enemies_orig.to_vec();
-
-        let mut nr_rounds = 0;
-        loop {
-            nr_rounds += 1;
-            round::run_round(&mut players, &mut enemies);
-            if players.iter().all(|c| !c.is_conscious()) {
-                break;
-            }
-            if enemies.iter().all(|c| !c.is_conscious()) {
-                players_win_count += 1;
-                break;
-            }
-        }
-        nr_rounds_sum += nr_rounds;
+        encounter.run(&mut stats);
     }
 
-    println!(
-        "Players win {} % of the time",
-        players_win_count as f32 / repetitions as f32 * 100.0
-    );
-    println!(
-        "Average number of rounds: {}",
-        nr_rounds_sum as f32 / repetitions as f32
-    );
-
-    let elapsed = now.elapsed();
-    println!("Program duration: {:.2?}", elapsed);
-}
-
-fn get_enemies() -> Vec<Participant> {
-    return load_participants_from_file(Path::new("data/enemies.yaml"));
-}
-
-fn get_players() -> Vec<Participant> {
-    return load_participants_from_file(Path::new("data/players.yaml"));
+    stats.print(repetitions);
 }

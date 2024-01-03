@@ -12,3 +12,4 @@ num = "0.4"
 mockall = "0.12"
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.9"
+clap = { version = "4.4.11", features = ["derive"] }
