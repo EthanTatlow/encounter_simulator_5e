@@ -1,6 +1,7 @@
+#[cfg(test)]
 use mockall::automock;
 
-#[automock]
+#[cfg_attr(test, automock)]
 pub trait Rollable<T> {
     fn roll(&self) -> T;
 }

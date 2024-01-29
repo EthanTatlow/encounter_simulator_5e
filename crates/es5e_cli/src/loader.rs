@@ -2,14 +2,14 @@ use std::fs;
 use std::path::Path;
 use std::str::FromStr;
 
-use crate::attack::attack::Attack;
-use crate::attack::damage::DamageRoll;
-use crate::attack::save_based;
-use crate::character::save::SaveModifiers;
-use crate::combat::action;
-use crate::combat::action_selection::{ActionSelection, StatefulAction};
-use crate::combat::participant::Participant;
-use crate::utils::save::{Save, SaveType};
+use lib_es5e_core::attack::attack::Attack;
+use lib_es5e_core::attack::damage::DamageRoll;
+use lib_es5e_core::attack::save_based;
+use lib_es5e_core::character::save::SaveModifiers;
+use lib_es5e_core::combat::action;
+use lib_es5e_core::combat::action_selection::{ActionSelection, StatefulAction};
+use lib_es5e_core::combat::participant::Participant;
+use lib_es5e_core::utils::save::{Save, SaveType};
 use serde::{Deserialize, Serialize};
 
 pub fn load_participants_from_file(file_path: &Path) -> Vec<Participant> {
@@ -17,7 +17,8 @@ pub fn load_participants_from_file(file_path: &Path) -> Vec<Participant> {
         fs::read_to_string(file_path).expect(format!("{file_path:?} not found").as_str());
     let values: Vec<ParticipantConfig> = serde_yaml::from_str(contents.as_str())
         .expect(format!("Unable to parse {file_path:?}").as_str());
-    println!("Participants loaded:\n{values:#?}\n");
+    let nr_participants = values.len();
+    println!("Participants loaded from {file_path:?}: {nr_participants}");
 
     values.into_iter().map(|e| e.into()).collect()
 }
@@ -141,9 +142,15 @@ impl From<ActionConfig> for action::Action {
     }
 }
 
-#[test]
-fn test_stuff() {
-    let yaml = "
+#[cfg(test)]
+mod test {
+    use lib_es5e_core::combat::participant::Participant;
+    use crate::loader::ParticipantConfig;
+
+    // Note: the API is currently very volatile, so more detailed tests are omitted for the time being
+    #[test]
+    fn test_parse() {
+        let yaml = "
   - name: dragon
     hp: 367
     ac: 22
@@ -183,10 +190,12 @@ fn test_stuff() {
             targets: 3
             damage: 15d8
             half_on_success: true
-
     ";
 
-    let values: Vec<ParticipantConfig> = serde_yaml::from_str(yaml).unwrap();
-    let part: Vec<Participant> = values.into_iter().map(|e| e.into()).collect();
-    print!("{part:?}");
+        let participants: Vec<ParticipantConfig> = serde_yaml::from_str(yaml).expect(
+            "unable to parse test data"
+        );
+        let part: Vec<Participant> = participants.into_iter().map(|e| e.into()).collect();
+        assert_eq!(part.len(), 1);
+    }
 }
