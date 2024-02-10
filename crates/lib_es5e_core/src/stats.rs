@@ -1,13 +1,19 @@
 use std::time::Instant;
 
-pub struct Stats {
+pub trait Stats {
+    fn record_round(&mut self);
+    fn record_win(&mut self, nr_survivors: usize);
+    fn print(&self, nr_repetitions: usize);
+}
+
+pub struct SimpleStats {
     start: Instant,
     players_win_count: usize,
     nr_rounds_sum: usize,
     nr_survivors_sum: usize,
 }
 
-impl Stats {
+impl SimpleStats {
     pub fn new() -> Self {
         Self {
             start: Instant::now(),
@@ -16,17 +22,19 @@ impl Stats {
             nr_survivors_sum: 0,
         }
     }
+}
 
-    pub fn record_round(&mut self) {
+impl Stats for SimpleStats {
+    fn record_round(&mut self) {
         self.nr_rounds_sum += 1;
     }
 
-    pub fn record_win(&mut self, nr_survivors: usize) {
+    fn record_win(&mut self, nr_survivors: usize) {
         self.players_win_count += 1;
         self.nr_survivors_sum += nr_survivors;
     }
 
-    pub fn print(&self, repetitions: usize) {
+    fn print(&self, repetitions: usize) {
         println!(
             "Players win {} % of the time",
             self.players_win_count as f32 / repetitions as f32 * 100.0

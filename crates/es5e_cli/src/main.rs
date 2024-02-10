@@ -1,12 +1,10 @@
-
-
 use std::path::Path;
 
-use lib_es5e_core::combat::encounter::Encounter;
+use lib_es5e_core::{combat::encounter::Encounter, stats::Stats};
 use loader::load_participants_from_file;
 
 use clap::Parser;
-use lib_es5e_core::stats::Stats;
+use lib_es5e_core::stats::SimpleStats;
 
 mod loader;
 
@@ -35,7 +33,7 @@ impl Args {
 }
 
 fn main() {
-    let mut stats = Stats::new();
+    let mut stats = SimpleStats::new();
     let args = Args::parse();
     let repetitions = args.repetitions;
     let encounter = args.load_encounter();

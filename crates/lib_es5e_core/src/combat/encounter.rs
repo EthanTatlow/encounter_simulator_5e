@@ -15,7 +15,7 @@ impl Encounter {
         Encounter { players, enemies }
     }
 
-    pub fn run(&self, stats: &mut Stats) {
+    pub fn run<T: Stats>(&self, stats: &mut T) {
         let mut players = self.players.to_vec();
         let mut enemies = self.enemies.to_vec();
 
