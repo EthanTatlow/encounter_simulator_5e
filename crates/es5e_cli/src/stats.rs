@@ -1,6 +1,6 @@
 use std::sync::{Arc, Mutex};
 
-use lib_es5e_core::stats::{SimpleStats, Stats};
+use lib_es5e_core::{stats::SimpleStats, stats::Stats};
 
 #[derive(Clone)]
 pub struct MultiThreadStats {
