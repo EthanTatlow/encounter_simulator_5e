@@ -22,11 +22,11 @@ impl Encounter {
         loop {
             run_round(&mut players, &mut enemies);
             stats.record_round();
-            if players.iter().all(|p| !p.is_conscious()) {
+            if all_defeated(&players) {
                 break;
             }
-            if enemies.iter().all(|e| !e.is_conscious()) {
-                let nr_survivors = players.iter().filter(|p| p.is_conscious()).count();
+            if all_defeated(&enemies) {
+                let nr_survivors = count_survivors(&players);
                 stats.record_win(nr_survivors);
                 break;
             }
@@ -40,7 +40,15 @@ fn run_round(players: &mut [Participant], enemies: &mut [Participant]) {
     take_actions(enemies, players);
 }
 
-pub fn take_actions(attackers: &mut [Participant], targets: &mut [Participant]) {
+fn take_actions(attackers: &mut [Participant], targets: &mut [Participant]) {
     let actions: Vec<Action> = attackers.iter_mut().map(|a| a.take_action()).collect();
     actions.iter().for_each(|a| a.execute(attackers, targets));
+}
+
+fn all_defeated(participants: &Vec<Participant>) -> bool {
+    participants.iter().all(|p| !p.is_conscious())
+}
+
+fn count_survivors(participants: &Vec<Participant>) -> usize {
+    participants.iter().filter(|p| p.is_conscious()).count()
 }
