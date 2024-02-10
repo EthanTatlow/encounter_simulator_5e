@@ -50,5 +50,7 @@ fn execute_attacks(atks: &Vec<Attack>, enemies: &[Rc<RefCell<Participant>>]) {
 fn execute_save_based_attack(atk: &SaveBasedAttack, enemies: &[Rc<RefCell<Participant>>]) {
     let strategy = target_selection_strategy();
     let targets_iter = strategy.select_multiple_targets(enemies, atk.nr_targets() as usize);
-    targets_iter.for_each(|enemy| atk.apply::<Participant>(&mut enemy.borrow_mut()));
+    targets_iter
+        .iter()
+        .for_each(|enemy| atk.apply::<Participant>(&mut enemy.borrow_mut()));
 }
