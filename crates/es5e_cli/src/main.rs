@@ -1,12 +1,13 @@
-use std::path::Path;
-
 use lib_es5e_core::{combat::encounter::Encounter, stats::Stats};
 use loader::load_participants_from_file;
+use rayon::prelude::*;
+use stats::MultiThreadStats;
+use std::path::Path;
 
 use clap::Parser;
-use lib_es5e_core::stats::SimpleStats;
 
 mod loader;
+mod stats;
 
 /// Combat encounter simulator for DnD 5e to simulate
 #[derive(Parser, Debug)]
@@ -33,14 +34,13 @@ impl Args {
 }
 
 fn main() {
-    let mut stats = SimpleStats::new();
+    let stats = MultiThreadStats::new();
     let args = Args::parse();
     let repetitions = args.repetitions;
     let encounter = args.load_encounter();
-
-    for _ in 0..repetitions {
-        encounter.run(&mut stats);
-    }
+    (0..repetitions)
+        .into_par_iter()
+        .for_each(|_| encounter.run(&mut stats.clone()));
 
     stats.print(repetitions);
 }
