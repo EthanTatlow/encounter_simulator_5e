@@ -1,3 +1,5 @@
+#[cfg(test)]
+use mockall::automock;
 use std::cmp::min;
 
 use crate::{
@@ -44,10 +46,12 @@ impl Combatant {
     }
 }
 
+#[cfg_attr(test, automock)]
 pub trait Target {
     fn is_conscious(&self) -> bool;
     fn take_damage(&mut self, damage: Damage);
     fn ac(&self) -> i16;
+    fn hp(&self) -> u32;
     fn saves(&self) -> &SaveModifiers;
 }
 
@@ -66,6 +70,10 @@ impl Target for Combatant {
 
     fn saves(&self) -> &SaveModifiers {
         &self.stats.saves
+    }
+
+    fn hp(&self) -> u32 {
+        self.stats.hp
     }
 }
 
