@@ -8,23 +8,23 @@ use lib_es5e_core::attack::save_based;
 use lib_es5e_core::character::save::SaveModifiers;
 use lib_es5e_core::combat::action;
 use lib_es5e_core::combat::action_selection::{ActionSelection, StatefulAction};
-use lib_es5e_core::combat::participant::Participant;
+use lib_es5e_core::combat::combatant::Combatant;
 use lib_es5e_core::utils::save::{Save, SaveType};
 use serde::{Deserialize, Serialize};
 
-pub fn load_participants_from_file(file_path: &Path) -> Vec<Participant> {
+pub fn load_combatants_from_file(file_path: &Path) -> Vec<Combatant> {
     let contents =
         fs::read_to_string(file_path).expect(format!("{file_path:?} not found").as_str());
-    let values: Vec<ParticipantConfig> = serde_yaml::from_str(contents.as_str())
+    let values: Vec<CombatantConfig> = serde_yaml::from_str(contents.as_str())
         .expect(format!("Unable to parse {file_path:?}").as_str());
-    let nr_participants = values.len();
-    println!("Participants loaded from {file_path:?}: {nr_participants}");
+    let nr_combatants = values.len();
+    println!("Combatants loaded from {file_path:?}: {nr_combatants}");
 
     values.into_iter().map(|e| e.into()).collect()
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct ParticipantConfig {
+struct CombatantConfig {
     pub name: String,
     pub hp: u32,
     pub ac: i16,
@@ -32,8 +32,8 @@ struct ParticipantConfig {
     pub actions: ActionSelectionConfig,
 }
 
-impl From<ParticipantConfig> for Participant {
-    fn from(enemy: ParticipantConfig) -> Self {
+impl From<CombatantConfig> for Combatant {
+    fn from(enemy: CombatantConfig) -> Self {
         Self::new(
             enemy.hp,
             enemy.ac,
@@ -144,8 +144,8 @@ impl From<ActionConfig> for action::Action {
 
 #[cfg(test)]
 mod test {
-    use lib_es5e_core::combat::participant::Participant;
-    use crate::loader::ParticipantConfig;
+    use crate::loader::CombatantConfig;
+    use lib_es5e_core::combat::combatant::Combatant;
 
     // Note: the API is currently very volatile, so more detailed tests are omitted for the time being
     #[test]
@@ -192,10 +192,9 @@ mod test {
             half_on_success: true
     ";
 
-        let participants: Vec<ParticipantConfig> = serde_yaml::from_str(yaml).expect(
-            "unable to parse test data"
-        );
-        let part: Vec<Participant> = participants.into_iter().map(|e| e.into()).collect();
+        let combatants: Vec<CombatantConfig> =
+            serde_yaml::from_str(yaml).expect("unable to parse test data");
+        let part: Vec<Combatant> = combatants.into_iter().map(|e| e.into()).collect();
         assert_eq!(part.len(), 1);
     }
 }

@@ -4,27 +4,27 @@ use crate::stats::Stats;
 
 use super::{
     action::Action,
-    participant::{ActiveParticipant, Damageable, Participant},
+    combatant::{ActiveCombatant, Combatant, Target},
 };
 
 pub struct Encounter {
-    players: Vec<Participant>,
-    enemies: Vec<Participant>,
+    players: Vec<Combatant>,
+    enemies: Vec<Combatant>,
 }
 
 impl Encounter {
-    pub fn new(players: Vec<Participant>, enemies: Vec<Participant>) -> Encounter {
+    pub fn new(players: Vec<Combatant>, enemies: Vec<Combatant>) -> Encounter {
         Encounter { players, enemies }
     }
 
     pub fn run<T: Stats>(&self, stats: &mut T) {
-        let players: Vec<Rc<RefCell<Participant>>> = self
+        let players: Vec<Rc<RefCell<Combatant>>> = self
             .players
             .to_vec()
             .into_iter()
             .map(|x| Rc::new(RefCell::new(x)))
             .collect();
-        let enemies: Vec<Rc<RefCell<Participant>>> = self
+        let enemies: Vec<Rc<RefCell<Combatant>>> = self
             .enemies
             .to_vec()
             .into_iter()
@@ -46,13 +46,13 @@ impl Encounter {
     }
 }
 
-fn run_round(players: &[Rc<RefCell<Participant>>], enemies: &[Rc<RefCell<Participant>>]) {
+fn run_round(players: &[Rc<RefCell<Combatant>>], enemies: &[Rc<RefCell<Combatant>>]) {
     // simplifying assumption: first players, then enemies. no initiativ
     take_actions(players, enemies);
     take_actions(enemies, players);
 }
 
-fn take_actions(attackers: &[Rc<RefCell<Participant>>], targets: &[Rc<RefCell<Participant>>]) {
+fn take_actions(attackers: &[Rc<RefCell<Combatant>>], targets: &[Rc<RefCell<Combatant>>]) {
     let actions: Vec<Action> = attackers
         .iter()
         .map(|a| a.borrow_mut().take_action())
@@ -60,12 +60,12 @@ fn take_actions(attackers: &[Rc<RefCell<Participant>>], targets: &[Rc<RefCell<Pa
     actions.iter().for_each(|a| a.execute(attackers, targets));
 }
 
-fn all_defeated(participants: &[Rc<RefCell<Participant>>]) -> bool {
-    participants.iter().all(|p| !p.borrow().is_conscious())
+fn all_defeated(combatants: &[Rc<RefCell<Combatant>>]) -> bool {
+    combatants.iter().all(|p| !p.borrow().is_conscious())
 }
 
-fn count_survivors(participants: &[Rc<RefCell<Participant>>]) -> usize {
-    participants
+fn count_survivors(combatants: &[Rc<RefCell<Combatant>>]) -> usize {
+    combatants
         .iter()
         .filter(|p| p.borrow().is_conscious())
         .count()

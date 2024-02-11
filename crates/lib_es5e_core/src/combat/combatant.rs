@@ -15,12 +15,12 @@ pub struct Stats {
 }
 
 #[derive(Clone, Debug)]
-pub struct Participant {
+pub struct Combatant {
     stats: Stats,
     action_selection: ActionSelection,
 }
 
-impl Participant {
+impl Combatant {
     pub fn new(hp: u32, ac: i16, saves: SaveModifiers, action_selection: ActionSelection) -> Self {
         Self {
             action_selection,
@@ -44,14 +44,14 @@ impl Participant {
     }
 }
 
-pub trait Damageable {
+pub trait Target {
     fn is_conscious(&self) -> bool;
     fn take_damage(&mut self, damage: Damage);
     fn ac(&self) -> i16;
     fn saves(&self) -> &SaveModifiers;
 }
 
-impl Damageable for Participant {
+impl Target for Combatant {
     fn is_conscious(&self) -> bool {
         self.stats.hp > 0
     }
@@ -69,11 +69,11 @@ impl Damageable for Participant {
     }
 }
 
-pub trait ActiveParticipant {
+pub trait ActiveCombatant {
     fn take_action(&mut self) -> Action;
 }
 
-impl ActiveParticipant for Participant {
+impl ActiveCombatant for Combatant {
     fn take_action(&mut self) -> Action {
         self.action_selection.update_and_select()
     }

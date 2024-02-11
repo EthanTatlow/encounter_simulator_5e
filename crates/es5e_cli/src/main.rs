@@ -1,5 +1,5 @@
 use lib_es5e_core::{combat::encounter::Encounter, stats::Stats};
-use loader::load_participants_from_file;
+use loader::load_combatants_from_file;
 use rayon::prelude::*;
 use stats::MultiThreadStats;
 use std::path::Path;
@@ -26,8 +26,8 @@ struct Args {
 
 impl Args {
     fn load_encounter(&self) -> Encounter {
-        let players = load_participants_from_file(Path::new(self.players_yaml_path.as_str()));
-        let enemies = load_participants_from_file(Path::new(self.enemies_yaml_path.as_str()));
+        let players = load_combatants_from_file(Path::new(self.players_yaml_path.as_str()));
+        let enemies = load_combatants_from_file(Path::new(self.enemies_yaml_path.as_str()));
 
         Encounter::new(players, enemies)
     }

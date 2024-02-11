@@ -5,18 +5,18 @@ use rand::{
     thread_rng,
 };
 
-use super::participant::{Damageable, Participant};
+use super::combatant::{Combatant, Target};
 
 pub trait TargetSelectionStrategy {
     fn select_single_target(
         &self,
-        targets: &[Rc<RefCell<Participant>>],
-    ) -> Option<Rc<RefCell<Participant>>>;
+        targets: &[Rc<RefCell<Combatant>>],
+    ) -> Option<Rc<RefCell<Combatant>>>;
     fn select_multiple_targets(
         &self,
-        targets: &[Rc<RefCell<Participant>>],
+        targets: &[Rc<RefCell<Combatant>>],
         max_targets: usize,
-    ) -> Vec<Rc<RefCell<Participant>>>;
+    ) -> Vec<Rc<RefCell<Combatant>>>;
 }
 
 pub fn target_selection_strategy() -> Box<dyn TargetSelectionStrategy> {
@@ -28,8 +28,8 @@ struct TargetRandomStrategy;
 impl TargetSelectionStrategy for TargetRandomStrategy {
     fn select_single_target(
         &self,
-        targets: &[Rc<RefCell<Participant>>],
-    ) -> Option<Rc<RefCell<Participant>>> {
+        targets: &[Rc<RefCell<Combatant>>],
+    ) -> Option<Rc<RefCell<Combatant>>> {
         let viable_indices = get_viable_indices(targets);
         viable_indices
             .iter()
@@ -39,9 +39,9 @@ impl TargetSelectionStrategy for TargetRandomStrategy {
 
     fn select_multiple_targets(
         &self,
-        targets: &[Rc<RefCell<Participant>>],
+        targets: &[Rc<RefCell<Combatant>>],
         max_targets: usize,
-    ) -> Vec<Rc<RefCell<Participant>>> {
+    ) -> Vec<Rc<RefCell<Combatant>>> {
         let viable_indices: Vec<_> = get_viable_indices(targets);
         let selected: Vec<_> = viable_indices
             .choose_multiple(&mut thread_rng(), max_targets)
@@ -61,20 +61,20 @@ struct TargetWeakestStrategy<A> {
 }
 
 trait SortAspect {
-    fn cmp(&self, a: Participant, b: Participant) -> Ordering;
+    fn cmp(&self, a: Combatant, b: Combatant) -> Ordering;
 }
 
 struct HpAspect;
 
 impl SortAspect for HpAspect {
-    fn cmp(&self, a: Participant, b: Participant) -> Ordering {
+    fn cmp(&self, a: Combatant, b: Combatant) -> Ordering {
         a.hp().cmp(&b.hp())
     }
 }
 struct AcAspect;
 
 impl SortAspect for AcAspect {
-    fn cmp(&self, a: Participant, b: Participant) -> Ordering {
+    fn cmp(&self, a: Combatant, b: Combatant) -> Ordering {
         a.ac().cmp(&b.ac())
     }
 }
@@ -85,8 +85,8 @@ where
 {
     fn select_single_target(
         &self,
-        targets: &[Rc<RefCell<Participant>>],
-    ) -> Option<Rc<RefCell<Participant>>> {
+        targets: &[Rc<RefCell<Combatant>>],
+    ) -> Option<Rc<RefCell<Combatant>>> {
         targets
             .into_iter()
             .filter(|target| target.borrow().is_conscious())
@@ -96,9 +96,9 @@ where
 
     fn select_multiple_targets(
         &self,
-        targets: &[Rc<RefCell<Participant>>],
+        targets: &[Rc<RefCell<Combatant>>],
         max_targets: usize,
-    ) -> Vec<Rc<RefCell<Participant>>> {
+    ) -> Vec<Rc<RefCell<Combatant>>> {
         let mut targets_to_sort: Vec<_> = targets
             .iter()
             .filter(|target| target.borrow().is_conscious())
@@ -109,7 +109,7 @@ where
     }
 }
 
-fn get_viable_indices(targets: &[Rc<RefCell<Participant>>]) -> Vec<usize> {
+fn get_viable_indices(targets: &[Rc<RefCell<Combatant>>]) -> Vec<usize> {
     targets
         .iter()
         .enumerate()

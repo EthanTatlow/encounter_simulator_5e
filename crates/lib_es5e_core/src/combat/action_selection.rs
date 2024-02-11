@@ -2,8 +2,6 @@ use crate::utils::{dice::Die, rollable::Rollable};
 
 use super::action::Action;
 
-pub struct ActionTable {}
-
 pub trait UpdateReceiver {
     fn on_turn_start(&mut self);
     fn on_use(&mut self);
