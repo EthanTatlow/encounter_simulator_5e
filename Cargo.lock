@@ -221,6 +221,7 @@ dependencies = [
  "num",
  "rand",
  "serde",
+ "serde_yaml",
 ]
 
 [[package]]
