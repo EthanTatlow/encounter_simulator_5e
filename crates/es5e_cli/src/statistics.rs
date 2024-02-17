@@ -1,21 +1,21 @@
 use std::sync::{Arc, Mutex};
 
-use lib_es5e_core::{stats::SimpleStats, stats::Stats};
+use lib_es5e_core::{statistics::BaseStatistics, statistics::Statistics};
 
 #[derive(Clone)]
-pub struct MultiThreadStats {
-    stats: Arc<Mutex<SimpleStats>>,
+pub struct MultiThreadStatistics {
+    stats: Arc<Mutex<BaseStatistics>>,
 }
 
-impl MultiThreadStats {
+impl MultiThreadStatistics {
     pub fn new() -> Self {
         Self {
-            stats: Arc::new(Mutex::new(SimpleStats::new())),
+            stats: Arc::new(Mutex::new(BaseStatistics::new())),
         }
     }
 }
 
-impl Stats for MultiThreadStats {
+impl Statistics for MultiThreadStatistics {
     fn record_round(&mut self) {
         self.stats.lock().unwrap().record_round()
     }

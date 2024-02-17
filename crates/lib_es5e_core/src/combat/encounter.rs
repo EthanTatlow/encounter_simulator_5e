@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::stats::Stats;
+use crate::statistics::Statistics;
 
 use super::{
     action::Action,
@@ -17,7 +17,7 @@ impl Encounter {
         Encounter { players, enemies }
     }
 
-    pub fn run<T: Stats>(&self, stats: &mut T) {
+    pub fn run<T: Statistics>(&self, stats: &mut T) {
         let players: Vec<Rc<RefCell<Combatant>>> = self
             .players
             .to_vec()

@@ -1,13 +1,13 @@
-use lib_es5e_core::{combat::encounter::Encounter, stats::Stats};
+use lib_es5e_core::{combat::encounter::Encounter, statistics::Statistics};
 use loader::load_combatants_from_file;
 use rayon::prelude::*;
-use stats::MultiThreadStats;
+use statistics::MultiThreadStatistics;
 use std::path::Path;
 
 use clap::Parser;
 
 mod loader;
-mod stats;
+mod statistics;
 
 /// Combat encounter simulator for DnD 5e to simulate
 #[derive(Parser, Debug)]
@@ -34,7 +34,7 @@ impl Args {
 }
 
 fn main() {
-    let stats = MultiThreadStats::new();
+    let stats = MultiThreadStatistics::new();
     let args = Args::parse();
     let repetitions = args.repetitions;
     let encounter = args.load_encounter();

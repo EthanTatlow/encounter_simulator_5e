@@ -1,19 +1,19 @@
 use std::time::Instant;
 
-pub trait Stats {
+pub trait Statistics {
     fn record_round(&mut self);
     fn record_win(&mut self, nr_survivors: usize);
     fn print(&self, nr_repetitions: usize);
 }
 
-pub struct SimpleStats {
+pub struct BaseStatistics {
     start: Instant,
     players_win_count: usize,
     nr_rounds_sum: usize,
     nr_survivors_sum: usize,
 }
 
-impl SimpleStats {
+impl BaseStatistics {
     pub fn new() -> Self {
         Self {
             start: Instant::now(),
@@ -24,7 +24,7 @@ impl SimpleStats {
     }
 }
 
-impl Stats for SimpleStats {
+impl Statistics for BaseStatistics {
     fn record_round(&mut self) {
         self.nr_rounds_sum += 1;
     }
