@@ -1,60 +1,18 @@
-use std::{cell::RefCell, cmp::Ordering, rc::Rc};
+use std::cell::RefCell;
 
-use rand::{
-    seq::{IteratorRandom, SliceRandom},
-    thread_rng,
-};
+use std::rc::Rc;
 
-use super::combatant::Target;
+use std::cmp::Ordering;
 
-pub trait TargetSelectionStrategy<T: Target> {
-    fn select_single_target(&self, targets: &[Rc<RefCell<T>>]) -> Option<Rc<RefCell<T>>>;
-    fn select_multiple_targets(
-        &self,
-        targets: &[Rc<RefCell<T>>],
-        max_targets: usize,
-    ) -> Vec<Rc<RefCell<T>>>;
+use crate::combat::combatant::Target;
+
+use super::strategy::TargetSelectionStrategy;
+
+pub(crate) struct TargetWeakestStrategy<A> {
+    pub(crate) aspect: A,
 }
 
-pub fn target_selection_strategy<T: Target>() -> Box<dyn TargetSelectionStrategy<T>> {
-    Box::new(TargetRandomStrategy)
-}
-
-struct TargetRandomStrategy;
-
-impl<T: Target> TargetSelectionStrategy<T> for TargetRandomStrategy {
-    fn select_single_target(&self, targets: &[Rc<RefCell<T>>]) -> Option<Rc<RefCell<T>>> {
-        let viable_indices = get_viable_indices(targets);
-        viable_indices
-            .iter()
-            .choose(&mut thread_rng())
-            .map(move |&idx| targets[idx].clone())
-    }
-
-    fn select_multiple_targets(
-        &self,
-        targets: &[Rc<RefCell<T>>],
-        max_targets: usize,
-    ) -> Vec<Rc<RefCell<T>>> {
-        let viable_indices: Vec<_> = get_viable_indices(targets);
-        let selected: Vec<_> = viable_indices
-            .choose_multiple(&mut thread_rng(), max_targets)
-            .copied()
-            .collect();
-        targets
-            .iter()
-            .enumerate()
-            .filter_map(move |(i, p)| selected.contains(&i).then(|| p))
-            .cloned()
-            .collect()
-    }
-}
-
-struct TargetWeakestStrategy<A> {
-    aspect: A,
-}
-
-trait SortAspect<T: Target> {
+pub(crate) trait SortAspect<T: Target> {
     type KeyType: Ord;
     fn key(&self, target: &T) -> Self::KeyType;
     fn cmp(&self, a: &T, b: &T) -> Ordering {
@@ -62,7 +20,7 @@ trait SortAspect<T: Target> {
     }
 }
 
-struct HpAspect;
+pub(crate) struct HpAspect;
 
 impl<T: Target> SortAspect<T> for HpAspect {
     type KeyType = u32;
@@ -70,7 +28,8 @@ impl<T: Target> SortAspect<T> for HpAspect {
         return target.hp();
     }
 }
-struct AcAspect;
+
+pub(crate) struct AcAspect;
 
 impl<T: Target> SortAspect<T> for AcAspect {
     type KeyType = i16;
@@ -107,23 +66,19 @@ where
     }
 }
 
-fn get_viable_indices<T: Target>(targets: &[Rc<RefCell<T>>]) -> Vec<usize> {
-    targets
-        .iter()
-        .enumerate()
-        .filter_map(|(i, p)| p.borrow().is_conscious().then(|| i))
-        .collect()
-}
-
 #[cfg(test)]
 mod test {
     use std::{cell::RefCell, rc::Rc};
 
     use rand::{seq::SliceRandom, thread_rng};
 
-    use crate::combat::combatant::{MockTarget, Target};
-
-    use super::{HpAspect, TargetSelectionStrategy, TargetWeakestStrategy};
+    use crate::{
+        combat::combatant::{MockTarget, Target},
+        targeting::{
+            strategy::TargetSelectionStrategy,
+            weakest::{HpAspect, TargetWeakestStrategy},
+        },
+    };
 
     #[test]
     fn test_select_weakest() {

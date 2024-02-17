@@ -6,10 +6,7 @@ use crate::utils::{
     save::Save,
 };
 
-use super::{
-    damage::{Damage, DamageRoll},
-    spell::Spell,
-};
+use super::damage::{Damage, DamageRoll};
 
 #[derive(Clone, Debug)]
 pub struct SaveBasedAttack {
@@ -54,19 +51,4 @@ impl SaveBasedAttack {
     pub fn nr_targets(&self) -> usize {
         self.nr_targets
     }
-}
-
-pub fn from_spell_and_stats(
-    spell: Spell,
-    stats: &crate::character::character::StaticStats,
-) -> SaveBasedAttack {
-    // TODO: find spell-casting ability
-    let dc = 8 + stats.proficiency_bonus() as i16 + stats.ability_modifiers().int();
-
-    SaveBasedAttack::new(
-        Save::new(spell.save_type().clone(), dc),
-        spell.nr_targets(),
-        spell.half_on_success(),
-        DamageRoll::new(spell.damage_dice(), 0),
-    )
 }

@@ -1,12 +1,14 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use crate::attack::{attack::Attack, save_based::SaveBasedAttack};
+use crate::{
+    attack::{attack::Attack, save_based::SaveBasedAttack},
+    targeting::strategy::target_selection_strategy,
+};
 
 use crate::character::effect::NegativeEffect;
 
 use super::combatant::Combatant;
-use super::targeting::target_selection_strategy;
 
 #[derive(Debug, Clone)]
 pub enum Action {

@@ -2,10 +2,7 @@
 use mockall::automock;
 use std::cmp::min;
 
-use crate::{
-    attack::damage::Damage,
-    character::{character::Character, save::SaveModifiers},
-};
+use crate::{attack::damage::Damage, character::save::SaveModifiers};
 
 use super::{action::Action, action_selection::ActionSelection};
 
@@ -27,17 +24,6 @@ impl Combatant {
         Self {
             action_selection,
             stats: Stats { hp, ac, saves },
-        }
-    }
-
-    pub fn new_from_character(character: Character, action_selection: ActionSelection) -> Self {
-        Self {
-            stats: Stats {
-                hp: character.hp(),
-                ac: character.ac(),
-                saves: character.saves().clone(),
-            },
-            action_selection,
         }
     }
 

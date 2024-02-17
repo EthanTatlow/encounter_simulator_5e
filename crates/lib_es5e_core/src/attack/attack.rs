@@ -1,10 +1,6 @@
-use crate::{
-    attack::weapon::Weapon,
-    character::ability::AbilityModifiers,
-    utils::{
-        dice::{beats_dc, is_natural_20, Die},
-        rollable::Rollable,
-    },
+use crate::utils::{
+    dice::{beats_dc, is_natural_20, Die},
+    rollable::Rollable,
 };
 
 use super::damage::{Damage, DamageRoll};
@@ -56,33 +52,4 @@ impl Attack {
         let hit_result = self.roll_attack(ac);
         self.calculate_damage(hit_result)
     }
-}
-
-fn weapon_ability_modifier(weapon: &Weapon, ability_modifiers: &AbilityModifiers) -> i16 {
-    if weapon.is_finesse() {
-        ability_modifiers.dex()
-    } else {
-        ability_modifiers.str()
-    }
-}
-
-fn attack_bonus(weapon: &Weapon, ability_modifiers: &AbilityModifiers, prof: u8) -> i16 {
-    let ability_modifier = weapon_ability_modifier(weapon, ability_modifiers);
-    prof as i16 + ability_modifier
-}
-
-pub(crate) fn from_weapon_and_stats(
-    weapon: Weapon,
-    stats: &crate::character::character::StaticStats,
-) -> Attack {
-    let attack_bonus = attack_bonus(
-        &weapon,
-        stats.ability_modifiers(),
-        stats.proficiency_bonus(),
-    );
-    let damage_bonus = weapon_ability_modifier(&weapon, stats.ability_modifiers());
-    Attack::new(
-        attack_bonus,
-        DamageRoll::new(weapon.damage_dice().to_vec(), damage_bonus),
-    )
 }
