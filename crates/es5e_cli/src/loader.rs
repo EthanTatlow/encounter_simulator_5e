@@ -1,9 +1,14 @@
-use lib_es5e_core::attack::damage::DamageRoll;
-use lib_es5e_core::attack::save_based;
-use lib_es5e_core::combat::action_selection::{ActionSelection, StatefulAction};
 use lib_es5e_core::utils::save::{Save, SaveType};
 use lib_es5e_core::{action::action, combatant::combatant::Combatant};
-use lib_es5e_core::{attack::attack::Attack, combatant::defences::save::SaveModifiers};
+use lib_es5e_core::{action::action::Action, attack::save_based::SaveBasedAttack};
+use lib_es5e_core::{
+    action::action::SingleAction,
+    combat::action_selection::{ActionSelection, StatefulAction},
+};
+use lib_es5e_core::{action::attack::Attack, combatant::defences::save::SaveModifiers};
+use lib_es5e_core::{
+    action::negative_effect::negative_effect::NegativeEffect, attack::damage::DamageRoll,
+};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
@@ -60,14 +65,14 @@ impl From<SavesConfig> for SaveModifiers {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ActionSelectionConfig {
-    pub default: ActionConfig,
+    pub default: Vec<ActionConfig>,
     pub special: Vec<StatefulActionConfig>,
 }
 
 impl From<ActionSelectionConfig> for ActionSelection {
     fn from(actions: ActionSelectionConfig) -> Self {
         ActionSelection::new(
-            action::Action::from(actions.default),
+            Action::Multi(actions.default.into_iter().map(|x| x.into()).collect()),
             actions
                 .special
                 .into_iter()
@@ -79,14 +84,20 @@ impl From<ActionSelectionConfig> for ActionSelection {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct StatefulActionConfig {
-    action: ActionConfig,
+    actions: Vec<ActionConfig>,
     recharge: u8,
 }
 
 impl From<StatefulActionConfig> for StatefulAction {
     fn from(stateful_action: StatefulActionConfig) -> Self {
         StatefulAction::new_recharge(
-            action::Action::from(stateful_action.action),
+            action::Action::Multi(
+                stateful_action
+                    .actions
+                    .into_iter()
+                    .map(|x| x.into())
+                    .collect(),
+            ),
             stateful_action.recharge,
         )
     }
@@ -94,7 +105,6 @@ impl From<StatefulActionConfig> for StatefulAction {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum ActionConfig {
-    MultiAction(Vec<ActionConfig>),
     Attack {
         name: String,
         atk: i16,
@@ -110,7 +120,7 @@ pub enum ActionConfig {
     },
 }
 
-impl From<ActionConfig> for action::Action {
+impl From<ActionConfig> for action::SingleAction {
     fn from(val: ActionConfig) -> Self {
         match val {
             ActionConfig::SaveBasedAttack {
@@ -120,21 +130,16 @@ impl From<ActionConfig> for action::Action {
                 targets,
                 damage,
                 half_on_success,
-            } => action::Action::SaveBasedAttack(save_based::SaveBasedAttack::new(
+            } => SingleAction::ApplyNegativeEffect(NegativeEffect::Saveable(SaveBasedAttack::new(
                 Save::new(save_type, save_dc),
                 targets,
                 half_on_success,
                 DamageRoll::from_str(damage.as_str()).unwrap(),
+            ))),
+            ActionConfig::Attack { name: _, atk, dmg } => SingleAction::Attack(Attack::new(
+                atk,
+                DamageRoll::from_str(dmg.as_str()).unwrap(),
             )),
-            ActionConfig::MultiAction(actions) => action::Action::MultiAction(
-                actions
-                    .into_iter()
-                    .map(|x| action::Action::from(x))
-                    .collect(),
-            ),
-            ActionConfig::Attack { name: _, atk, dmg } => action::Action::SingleAttack(
-                Attack::new(atk, DamageRoll::from_str(dmg.as_str()).unwrap()),
-            ),
         }
     }
 }
@@ -161,14 +166,6 @@ mod test {
       cha: 11
     actions:
       default:
-        !MultiAction
-        # - 
-          # Currently missing status effects
-          # - name: frightening presence
-          #   type: save_based_attack
-          #   targets: 100
-          #   save_dc: 19
-          #   save_type: !WIS
         - &claws !Attack
           name: claws
           atk: 15
@@ -180,14 +177,14 @@ mod test {
           dmg: 2d6+8
       special:
         - recharge: 5 # recharges on a 5 or higher when rolling 1d6
-          action:
-            !SaveBasedAttack
-            name: breath weapon
-            save_dc: 22
-            save_type: !DEX
-            targets: 3
-            damage: 15d8
-            half_on_success: true
+          actions:
+            - !SaveBasedAttack
+              name: breath weapon
+              save_dc: 22
+              save_type: !DEX
+              targets: 3
+              damage: 15d8
+              half_on_success: true
     ";
 
         let combatants: Vec<CombatantConfig> =

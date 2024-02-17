@@ -1,13 +1,12 @@
 use crate::{
-    action::negative_effect::negative_effect::NegativeEffect,
+    action::effect::Effect,
+    attack::damage::{Damage, DamageRoll},
     targeting::target::Target,
     utils::{
         dice::{beats_dc, is_natural_20, Die},
         rollable::Rollable,
     },
 };
-
-use super::damage::{Damage, DamageRoll};
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum HitResult {
@@ -58,7 +57,7 @@ impl Attack {
     }
 }
 
-impl NegativeEffect for Attack {
+impl Effect for Attack {
     fn number_of_targets(&self) -> usize {
         1
     }

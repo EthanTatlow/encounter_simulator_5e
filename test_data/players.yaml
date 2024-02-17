@@ -10,7 +10,6 @@
     cha: 10
   actions:
     default:
-      !MultiAction
       - &eldritch_blast !Attack
         name: eldritch blast
         atk: 10
@@ -20,14 +19,14 @@
     special:
       # TODO: charges
       - recharge: 1
-        action:
-          !SaveBasedAttack
-          name: Synaptic Static
-          save_dc: 18
-          save_type: !WIS
-          targets: 8
-          damage: 6d6
-          half_on_success: true
+        actions:
+          - !SaveBasedAttack
+            name: Synaptic Static
+            save_dc: 18
+            save_type: !WIS
+            targets: 8
+            damage: 6d6
+            half_on_success: true
 
 - name: rittersporn
   hp: 75
@@ -41,24 +40,24 @@
     cha: 10
   actions:
     default:
-      !SaveBasedAttack
-      name: Vicious Mockery
-      save_dc: 18
-      save_type: !DEX
-      targets: 3
-      damage: 3d4
-      half_on_success: false
+      - !SaveBasedAttack
+        name: Vicious Mockery
+        save_dc: 18
+        save_type: !DEX
+        targets: 3
+        damage: 3d4
+        half_on_success: false
     special:
       - # TODO: charges: 3
         recharge: 2
-        action:
-          !SaveBasedAttack
-          half_on_success: true
-          name: Lightning Bolt
-          save_dc: 18
-          save_type: !DEX
-          targets: 8
-          damage: 6d6
+        actions:
+          - !SaveBasedAttack
+            half_on_success: true
+            name: Lightning Bolt
+            save_dc: 18
+            save_type: !DEX
+            targets: 8
+            damage: 6d6
 
 - name: olaf
   hp: 298
@@ -92,31 +91,31 @@
     cha: 10
   actions:
     default:
-      !Attack
-      name: fire bolt
-      atk: 9
-      dmg: 3d10+4
+      - !Attack
+        name: fire bolt
+        atk: 9
+        dmg: 3d10+4
     special:
       - # TODO: charges: 2
         recharge: 3
-        action:
-          !SaveBasedAttack
-          name: disintegrate
-          half_on_success: false
-          save_dc: 17
-          save_type: !DEX
-          targets: 10
-          damage: 10d6
+        actions:
+          - !SaveBasedAttack
+            name: disintegrate
+            half_on_success: false
+            save_dc: 17
+            save_type: !DEX
+            targets: 10
+            damage: 10d6
       - # TODO charges: 5
         recharge: 1
-        action:
-          !SaveBasedAttack
-          name: blight
-          half_on_success: true
-          save_dc: 17
-          save_type: !CON
-          targets: 8
-          damage: 8d8
+        actions:
+          - !SaveBasedAttack
+            name: blight
+            half_on_success: true
+            save_dc: 17
+            save_type: !CON
+            targets: 8
+            damage: 8d8
 
 - name: tarik
   hp: 157
@@ -130,7 +129,6 @@
     cha: 10
   actions:
     default:
-      !MultiAction
       # TODO: fix; also: mixed dice in damage
       - !Attack
         name: dagger shocking

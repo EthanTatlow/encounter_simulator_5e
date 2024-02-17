@@ -10,14 +10,6 @@
     cha: 11
   actions:
     default:
-      !MultiAction
-      # - 
-        # Currently missing status effects
-        # - name: frightening presence
-        #   type: save_based_attack
-        #   targets: 100
-        #   save_dc: 19
-        #   save_type: !WIS
       - &claws !Attack
         name: claws
         atk: 15
@@ -29,11 +21,11 @@
         dmg: 2d6+8
     special:
       - recharge: 5 # recharges on a 5 or higher when rolling 1d6
-        action:
-          !SaveBasedAttack
-          name: breath weapon
-          save_dc: 22
-          save_type: !DEX
-          targets: 3
-          damage: 15d8
-          half_on_success: true
+        actions:
+          - !SaveBasedAttack
+            name: breath weapon
+            save_dc: 22
+            save_type: !DEX
+            targets: 3
+            damage: 15d8
+            half_on_success: true

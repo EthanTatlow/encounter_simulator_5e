@@ -1,7 +1,7 @@
 // This should include spells, spell-like effects, special abilities, etc.
 
 use crate::{
-    action::negative_effect::negative_effect::NegativeEffect,
+    action::effect::Effect,
     targeting::target::Target,
     utils::{
         dice::{beats_dc, Die},
@@ -57,7 +57,7 @@ impl SaveBasedAttack {
     }
 }
 
-impl NegativeEffect for SaveBasedAttack {
+impl Effect for SaveBasedAttack {
     fn number_of_targets(&self) -> usize {
         self.nr_targets()
     }

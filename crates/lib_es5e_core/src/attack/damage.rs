@@ -32,6 +32,7 @@ impl DamageRoll {
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct Damage {
     amount: u32,
 }

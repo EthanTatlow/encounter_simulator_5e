@@ -1,52 +1,52 @@
 use std::cell::RefCell;
+use std::fmt::Debug;
 use std::rc::Rc;
 
-use crate::{
-    attack::{attack::Attack, save_based::SaveBasedAttack},
-    combatant::combatant::Combatant,
-    targeting::strategy::target_selection_strategy,
-};
+use crate::{combatant::combatant::Combatant, targeting::strategy::target_selection_strategy};
 
-use super::negative_effect::negative_effect::NegativeEffect;
+use super::{attack::Attack, effect::Effect, negative_effect::negative_effect::NegativeEffect};
 
 #[derive(Debug, Clone)]
 pub enum Action {
-    MultiAction(Vec<Action>),
-    SingleAttack(Attack),
-    MultiAttack(Vec<Attack>),
-    SaveBasedAttack(SaveBasedAttack),
+    Multi(Vec<SingleAction>),
+    Single(SingleAction),
+}
+
+impl Action {
+    pub fn resource_cost() {
+        todo!()
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum SingleAction {
+    ApplyNegativeEffect(NegativeEffect),
+    Attack(Attack),
+}
+
+impl SingleAction {
+    pub fn execute(&self, _allies: &[Rc<RefCell<Combatant>>], enemies: &[Rc<RefCell<Combatant>>]) {
+        let strategy = target_selection_strategy();
+        match self {
+            Self::ApplyNegativeEffect(effect) => strategy
+                .select_multiple_targets(enemies, effect.number_of_targets())
+                .iter()
+                .for_each(|enemy| effect.apply(&mut enemy.borrow_mut() as &mut Combatant)),
+            Self::Attack(attack) => strategy
+                .select_single_target(enemies)
+                .iter()
+                .for_each(|enemy| attack.apply(&mut enemy.borrow_mut() as &mut Combatant)),
+        }
+    }
 }
 
 impl Action {
     pub fn execute(&self, _allies: &[Rc<RefCell<Combatant>>], enemies: &[Rc<RefCell<Combatant>>]) {
         match self {
-            Action::MultiAttack(atks) => execute_attacks(atks, enemies),
-            Action::SaveBasedAttack(atk) => execute_save_based_attack(atk, enemies),
-            Action::SingleAttack(atk) => select_target_and_attack(atk, enemies),
-            Action::MultiAction(actions) => actions
+            Action::Single(action) => action.execute(_allies, enemies),
+            Action::Multi(actions) => actions
                 .iter()
                 .for_each(|action| action.execute(_allies, enemies)),
         }
     }
-}
-
-// TODO: target selection strategy configurable
-fn select_target_and_attack(atk: &Attack, enemies: &[Rc<RefCell<Combatant>>]) {
-    let strategy = target_selection_strategy();
-    if let Some(target) = strategy.select_single_target(enemies) {
-        atk.apply::<Combatant>(&mut target.borrow_mut());
-    }
-}
-
-fn execute_attacks(atks: &Vec<Attack>, enemies: &[Rc<RefCell<Combatant>>]) {
-    atks.iter()
-        .for_each(|atk| select_target_and_attack(atk, enemies))
-}
-
-fn execute_save_based_attack(atk: &SaveBasedAttack, enemies: &[Rc<RefCell<Combatant>>]) {
-    let strategy = target_selection_strategy();
-    let targets_iter = strategy.select_multiple_targets(enemies, atk.nr_targets() as usize);
-    targets_iter
-        .iter()
-        .for_each(|enemy| atk.apply::<Combatant>(&mut enemy.borrow_mut()));
 }

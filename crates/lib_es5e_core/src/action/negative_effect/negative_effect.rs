@@ -1,6 +1,28 @@
-use crate::targeting::target::Target;
+use crate::{
+    action::effect::Effect,
+    attack::{damage::Damage, save_based::SaveBasedAttack},
+};
 
-pub trait NegativeEffect {
-    fn number_of_targets(&self) -> usize;
-    fn apply<T: Target>(&self, target: &mut T);
+#[derive(Clone, Debug)]
+pub enum NegativeEffect {
+    Condition,
+    Damage(Damage),
+    Saveable(SaveBasedAttack),
+    Multi(Vec<NegativeEffect>),
+}
+
+impl Effect for NegativeEffect {
+    fn number_of_targets(&self) -> usize {
+        match &self {
+            Self::Saveable(atk) => atk.number_of_targets(),
+            _ => todo!(),
+        }
+    }
+
+    fn apply<T: crate::targeting::target::Target>(&self, target: &mut T) {
+        match &self {
+            Self::Saveable(atk) => atk.apply(target),
+            _ => todo!(),
+        }
+    }
 }
