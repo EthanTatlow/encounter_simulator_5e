@@ -4,7 +4,7 @@ use std::rc::Rc;
 
 use std::cmp::Ordering;
 
-use crate::combat::combatant::Target;
+use crate::targeting::target::Target;
 
 use super::strategy::TargetSelectionStrategy;
 
@@ -72,12 +72,10 @@ mod test {
 
     use rand::{seq::SliceRandom, thread_rng};
 
-    use crate::{
-        combat::combatant::{MockTarget, Target},
-        targeting::{
-            strategy::TargetSelectionStrategy,
-            weakest::{HpAspect, TargetWeakestStrategy},
-        },
+    use crate::targeting::{
+        strategy::TargetSelectionStrategy,
+        target::{MockTarget, Target},
+        weakest::{HpAspect, TargetWeakestStrategy},
     };
 
     #[test]

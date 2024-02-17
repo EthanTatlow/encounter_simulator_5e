@@ -1,6 +1,7 @@
-use crate::utils::{dice::Die, rollable::Rollable};
-
-use super::action::Action;
+use crate::{
+    action::action::Action,
+    utils::{dice::Die, rollable::Rollable},
+};
 
 pub trait UpdateReceiver {
     fn on_turn_start(&mut self);

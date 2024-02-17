@@ -1,9 +1,13 @@
 // This should include spells, spell-like effects, special abilities, etc.
 
-use crate::utils::{
-    dice::{beats_dc, Die},
-    rollable::Rollable,
-    save::Save,
+use crate::{
+    action::negative_effect::negative_effect::NegativeEffect,
+    targeting::target::Target,
+    utils::{
+        dice::{beats_dc, Die},
+        rollable::Rollable,
+        save::Save,
+    },
 };
 
 use super::damage::{Damage, DamageRoll};
@@ -50,5 +54,19 @@ impl SaveBasedAttack {
 
     pub fn nr_targets(&self) -> usize {
         self.nr_targets
+    }
+}
+
+impl NegativeEffect for SaveBasedAttack {
+    fn number_of_targets(&self) -> usize {
+        self.nr_targets()
+    }
+
+    fn apply<T: Target>(&self, target: &mut T) {
+        let save_modifier: i16 = target.saves().modifier(self.save().save_type());
+        let damage = self.roll_save(save_modifier);
+        if damage.amount() > 0 {
+            target.take_damage(damage)
+        }
     }
 }

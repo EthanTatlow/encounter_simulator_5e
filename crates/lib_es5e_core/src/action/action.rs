@@ -3,12 +3,11 @@ use std::rc::Rc;
 
 use crate::{
     attack::{attack::Attack, save_based::SaveBasedAttack},
+    combatant::combatant::Combatant,
     targeting::strategy::target_selection_strategy,
 };
 
-use crate::character::effect::NegativeEffect;
-
-use super::combatant::Combatant;
+use super::negative_effect::negative_effect::NegativeEffect;
 
 #[derive(Debug, Clone)]
 pub enum Action {
@@ -35,7 +34,6 @@ impl Action {
 fn select_target_and_attack(atk: &Attack, enemies: &[Rc<RefCell<Combatant>>]) {
     let strategy = target_selection_strategy();
     if let Some(target) = strategy.select_single_target(enemies) {
-        //let mut target = target.clone().borrow().to_owned();
         atk.apply::<Combatant>(&mut target.borrow_mut());
     }
 }

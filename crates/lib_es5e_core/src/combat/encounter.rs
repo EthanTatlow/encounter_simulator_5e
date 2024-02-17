@@ -1,10 +1,8 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::statistics::Statistics;
-
-use super::{
-    action::Action,
-    combatant::{ActiveCombatant, Combatant, Target},
+use crate::{
+    action::action::Action, combatant::combatant::Combatant, statistics::Statistics,
+    targeting::target::Target,
 };
 
 pub struct Encounter {

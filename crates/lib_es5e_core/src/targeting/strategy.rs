@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::combat::combatant::Target;
+use crate::targeting::target::Target;
 
 use super::random::TargetRandomStrategy;
 

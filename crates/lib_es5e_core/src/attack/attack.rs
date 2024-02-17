@@ -1,6 +1,10 @@
-use crate::utils::{
-    dice::{beats_dc, is_natural_20, Die},
-    rollable::Rollable,
+use crate::{
+    action::negative_effect::negative_effect::NegativeEffect,
+    targeting::target::Target,
+    utils::{
+        dice::{beats_dc, is_natural_20, Die},
+        rollable::Rollable,
+    },
 };
 
 use super::damage::{Damage, DamageRoll};
@@ -51,5 +55,18 @@ impl Attack {
     pub(crate) fn roll_attack_with_damage(&self, ac: i16) -> Damage {
         let hit_result = self.roll_attack(ac);
         self.calculate_damage(hit_result)
+    }
+}
+
+impl NegativeEffect for Attack {
+    fn number_of_targets(&self) -> usize {
+        1
+    }
+
+    fn apply<T: Target>(&self, target: &mut T) {
+        let damage: crate::attack::damage::Damage = self.roll_attack_with_damage(target.ac());
+        if damage.amount() > 0 {
+            target.take_damage(damage)
+        }
     }
 }

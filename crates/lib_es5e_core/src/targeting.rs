@@ -1,3 +1,4 @@
-pub(crate) mod strategy;
 mod random;
+pub(crate) mod strategy;
+pub(crate) mod target;
 mod weakest;

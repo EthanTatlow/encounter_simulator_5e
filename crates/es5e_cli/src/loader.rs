@@ -1,16 +1,13 @@
+use lib_es5e_core::attack::damage::DamageRoll;
+use lib_es5e_core::attack::save_based;
+use lib_es5e_core::combat::action_selection::{ActionSelection, StatefulAction};
+use lib_es5e_core::utils::save::{Save, SaveType};
+use lib_es5e_core::{action::action, combatant::combatant::Combatant};
+use lib_es5e_core::{attack::attack::Attack, combatant::defences::save::SaveModifiers};
+use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
 use std::str::FromStr;
-
-use lib_es5e_core::attack::attack::Attack;
-use lib_es5e_core::attack::damage::DamageRoll;
-use lib_es5e_core::attack::save_based;
-use lib_es5e_core::character::save::SaveModifiers;
-use lib_es5e_core::combat::action;
-use lib_es5e_core::combat::action_selection::{ActionSelection, StatefulAction};
-use lib_es5e_core::combat::combatant::Combatant;
-use lib_es5e_core::utils::save::{Save, SaveType};
-use serde::{Deserialize, Serialize};
 
 pub fn load_combatants_from_file(file_path: &Path) -> Vec<Combatant> {
     let contents =
@@ -144,8 +141,9 @@ impl From<ActionConfig> for action::Action {
 
 #[cfg(test)]
 mod test {
+    use lib_es5e_core::combatant::combatant::Combatant;
+
     use crate::loader::CombatantConfig;
-    use lib_es5e_core::combat::combatant::Combatant;
 
     // Note: the API is currently very volatile, so more detailed tests are omitted for the time being
     #[test]

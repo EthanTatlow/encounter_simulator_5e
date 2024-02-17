@@ -5,7 +5,7 @@ use rand::{
     thread_rng,
 };
 
-use crate::combat::combatant::Target;
+use crate::targeting::target::Target;
 
 use super::strategy::{get_viable_indices, TargetSelectionStrategy};
 
