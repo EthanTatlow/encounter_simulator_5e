@@ -1,7 +1,7 @@
 use crate::{
     action::effect::Effect,
     attack::damage::{Damage, DamageRoll},
-    targeting::target::Target,
+    combatant::combatant::Combatant,
     utils::{
         dice::{beats_dc, is_natural_20, Die},
         rollable::Rollable,
@@ -62,7 +62,7 @@ impl Effect for Attack {
         1
     }
 
-    fn apply<T: Target>(&self, target: &mut T) {
+    fn apply(&self, target: &mut Combatant) {
         let damage: crate::attack::damage::Damage = self.roll_attack_with_damage(target.ac());
         if damage.amount() > 0 {
             target.take_damage(damage)

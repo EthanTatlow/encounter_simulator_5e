@@ -1,6 +1,6 @@
-use crate::targeting::target::Target;
+use crate::combatant::combatant::Combatant;
 
 pub trait Effect {
     fn number_of_targets(&self) -> usize;
-    fn apply<T: Target>(&self, target: &mut T);
+    fn apply(&self, target: &mut Combatant);
 }

@@ -1,6 +1,7 @@
 use crate::{
     action::effect::Effect,
     attack::{damage::Damage, save_based::SaveBasedAttack},
+    combatant::combatant::Combatant,
 };
 
 #[derive(Clone, Debug)]
@@ -19,7 +20,7 @@ impl Effect for NegativeEffect {
         }
     }
 
-    fn apply<T: crate::targeting::target::Target>(&self, target: &mut T) {
+    fn apply(&self, target: &mut Combatant) {
         match &self {
             Self::Saveable(atk) => atk.apply(target),
             _ => todo!(),

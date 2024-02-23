@@ -5,14 +5,17 @@ use rand::{
     thread_rng,
 };
 
-use crate::targeting::target::Target;
+use crate::combatant::combatant::Combatant;
 
 use super::strategy::{get_viable_indices, TargetSelectionStrategy};
 
 pub(super) struct TargetRandomStrategy;
 
-impl<T: Target> TargetSelectionStrategy<T> for TargetRandomStrategy {
-    fn select_single_target(&self, targets: &[Rc<RefCell<T>>]) -> Option<Rc<RefCell<T>>> {
+impl TargetSelectionStrategy for TargetRandomStrategy {
+    fn select_single_target(
+        &self,
+        targets: &[Rc<RefCell<Combatant>>],
+    ) -> Option<Rc<RefCell<Combatant>>> {
         let viable_indices = get_viable_indices(targets);
         viable_indices
             .iter()
@@ -22,9 +25,9 @@ impl<T: Target> TargetSelectionStrategy<T> for TargetRandomStrategy {
 
     fn select_multiple_targets(
         &self,
-        targets: &[Rc<RefCell<T>>],
+        targets: &[Rc<RefCell<Combatant>>],
         max_targets: usize,
-    ) -> Vec<Rc<RefCell<T>>> {
+    ) -> Vec<Rc<RefCell<Combatant>>> {
         let viable_indices: Vec<_> = get_viable_indices(targets);
         let selected: Vec<_> = viable_indices
             .choose_multiple(&mut thread_rng(), max_targets)

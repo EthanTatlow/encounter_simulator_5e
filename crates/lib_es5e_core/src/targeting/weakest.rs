@@ -4,7 +4,7 @@ use std::rc::Rc;
 
 use std::cmp::Ordering;
 
-use crate::targeting::target::Target;
+use crate::combatant::combatant::Combatant;
 
 use super::strategy::TargetSelectionStrategy;
 
@@ -12,38 +12,40 @@ pub(crate) struct TargetWeakestStrategy<A> {
     pub(crate) aspect: A,
 }
 
-pub(crate) trait SortAspect<T: Target> {
+pub(crate) trait SortAspect {
     type KeyType: Ord;
-    fn key(&self, target: &T) -> Self::KeyType;
-    fn cmp(&self, a: &T, b: &T) -> Ordering {
+    fn key(&self, target: &Combatant) -> Self::KeyType;
+    fn cmp(&self, a: &Combatant, b: &Combatant) -> Ordering {
         return self.key(a).cmp(&self.key(b));
     }
 }
 
 pub(crate) struct HpAspect;
 
-impl<T: Target> SortAspect<T> for HpAspect {
+impl SortAspect for HpAspect {
     type KeyType = u32;
-    fn key(&self, target: &T) -> Self::KeyType {
+    fn key(&self, target: &Combatant) -> Self::KeyType {
         return target.hp();
     }
 }
 
 pub(crate) struct AcAspect;
 
-impl<T: Target> SortAspect<T> for AcAspect {
+impl SortAspect for AcAspect {
     type KeyType = i16;
-    fn key(&self, target: &T) -> Self::KeyType {
+    fn key(&self, target: &Combatant) -> Self::KeyType {
         return target.ac();
     }
 }
 
-impl<A, T> TargetSelectionStrategy<T> for TargetWeakestStrategy<A>
+impl<A> TargetSelectionStrategy for TargetWeakestStrategy<A>
 where
-    A: SortAspect<T>,
-    T: Target,
+    A: SortAspect,
 {
-    fn select_single_target(&self, targets: &[Rc<RefCell<T>>]) -> Option<Rc<RefCell<T>>> {
+    fn select_single_target(
+        &self,
+        targets: &[Rc<RefCell<Combatant>>],
+    ) -> Option<Rc<RefCell<Combatant>>> {
         targets
             .into_iter()
             .filter(|target| target.borrow().is_conscious())
@@ -53,9 +55,9 @@ where
 
     fn select_multiple_targets(
         &self,
-        targets: &[Rc<RefCell<T>>],
+        targets: &[Rc<RefCell<Combatant>>],
         max_targets: usize,
-    ) -> Vec<Rc<RefCell<T>>> {
+    ) -> Vec<Rc<RefCell<Combatant>>> {
         let mut targets_to_sort: Vec<_> = targets
             .iter()
             .filter(|target| target.borrow().is_conscious())
@@ -72,48 +74,57 @@ mod test {
 
     use rand::{seq::SliceRandom, thread_rng};
 
-    use crate::targeting::{
-        strategy::TargetSelectionStrategy,
-        target::{MockTarget, Target},
-        weakest::{HpAspect, TargetWeakestStrategy},
+    use crate::{
+        combat::action_selection::ActionSelection,
+        combatant::{combatant::Combatant, defences::save::SaveModifiers},
+        targeting::{
+            strategy::TargetSelectionStrategy,
+            weakest::{AcAspect, HpAspect, TargetWeakestStrategy},
+        },
     };
 
     #[test]
-    fn test_select_weakest() {
-        let mut targets = vec![Rc::new(RefCell::new(MockTarget::new())); 4];
-        for (i, target) in targets.iter().enumerate() {
-            target.borrow_mut().expect_is_conscious().return_const(true);
-            target.borrow_mut().expect_hp().return_const(1 + i as u32);
-        }
+    fn select_weakest_hp_discounting_unconscious() {
+        let mut targets: Vec<_> = (0..5)
+            .into_iter()
+            .map(|hp| {
+                Rc::new(RefCell::new(Combatant::new(
+                    hp,
+                    10,
+                    SaveModifiers::default(),
+                    ActionSelection::default(),
+                )))
+            })
+            .collect();
         targets.shuffle(&mut thread_rng());
-        let sut = TargetWeakestStrategy {
-            aspect: HpAspect {},
-        };
-        let a = sut.select_single_target(&targets);
-        assert_eq!(a.unwrap().borrow().hp(), 1);
+
+        let sut = TargetWeakestStrategy { aspect: HpAspect };
+        let selected = sut.select_single_target(&targets);
+
+        assert_eq!(selected.unwrap().borrow().hp(), 1);
     }
 
     #[test]
-    fn test_select_multiple_weakest() {
-        let mut targets: Vec<Rc<RefCell<_>>> = (0..4)
+    fn select_multiple_weakest_ac() {
+        let mut targets: Vec<_> = (1..5)
             .into_iter()
-            .map(|_| Rc::new(RefCell::new(MockTarget::new())))
+            .map(|ac| {
+                Rc::new(RefCell::new(Combatant::new(
+                    42,
+                    ac,
+                    SaveModifiers::default(),
+                    ActionSelection::default(),
+                )))
+            })
             .collect();
-        for (i, target) in targets.iter().enumerate() {
-            target.borrow_mut().expect_is_conscious().returning(|| true);
-            target
-                .borrow_mut()
-                .expect_hp()
-                .returning(move || 1 + i as u32);
-        }
+
         targets.shuffle(&mut thread_rng());
 
-        let sut = TargetWeakestStrategy {
-            aspect: HpAspect {},
-        };
-        let a = sut.select_multiple_targets(&targets, 2);
-        assert_eq!(2, a.len());
-        assert_eq!(a.get(0).unwrap().borrow().hp(), 1);
-        assert_eq!(a.get(1).unwrap().borrow().hp(), 2);
+        let sut = TargetWeakestStrategy { aspect: AcAspect };
+        let selected = sut.select_multiple_targets(&targets, 2);
+
+        assert_eq!(2, selected.len());
+        assert_eq!(selected.get(0).unwrap().borrow().ac(), 1);
+        assert_eq!(selected.get(1).unwrap().borrow().ac(), 2);
     }
 }

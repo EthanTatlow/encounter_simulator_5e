@@ -2,7 +2,7 @@ use std::cmp::min;
 
 use crate::{
     action::action::Action, attack::damage::Damage, combat::action_selection::ActionSelection,
-    combatant::defences::save::SaveModifiers, targeting::target::Target,
+    combatant::defences::save::SaveModifiers,
 };
 
 #[derive(Clone, Debug)]
@@ -29,26 +29,24 @@ impl Combatant {
     pub fn take_action(&mut self) -> Action {
         self.action_selection.update_and_select()
     }
-}
 
-impl Target for Combatant {
-    fn is_conscious(&self) -> bool {
+    pub fn is_conscious(&self) -> bool {
         self.stats.hp > 0
     }
 
-    fn take_damage(&mut self, damage: Damage) {
+    pub fn take_damage(&mut self, damage: Damage) {
         self.stats.hp -= min(damage.amount(), self.stats.hp)
     }
 
-    fn ac(&self) -> i16 {
+    pub fn ac(&self) -> i16 {
         self.stats.ac
     }
 
-    fn saves(&self) -> &SaveModifiers {
+    pub fn saves(&self) -> &SaveModifiers {
         &self.stats.saves
     }
 
-    fn hp(&self) -> u32 {
+    pub fn hp(&self) -> u32 {
         self.stats.hp
     }
 }

@@ -1,9 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::{
-    action::action::Action, combatant::combatant::Combatant, statistics::Statistics,
-    targeting::target::Target,
-};
+use crate::{action::action::Action, combatant::combatant::Combatant, statistics::Statistics};
 
 pub struct Encounter {
     players: Vec<Combatant>,

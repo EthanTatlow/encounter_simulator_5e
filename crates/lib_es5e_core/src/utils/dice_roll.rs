@@ -2,7 +2,7 @@ use std::{cmp, str::FromStr};
 
 use super::{dice::Die, rollable::roll_sum};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct DiceRoll {
     dice: Vec<Die>,
     modifier: i16,

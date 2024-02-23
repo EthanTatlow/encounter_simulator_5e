@@ -6,10 +6,12 @@ use crate::{combatant::combatant::Combatant, targeting::strategy::target_selecti
 
 use super::{attack::Attack, effect::Effect, negative_effect::negative_effect::NegativeEffect};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub enum Action {
     Multi(Vec<SingleAction>),
     Single(SingleAction),
+    #[default]
+    None,
 }
 
 impl Action {
@@ -47,6 +49,7 @@ impl Action {
             Action::Multi(actions) => actions
                 .iter()
                 .for_each(|action| action.execute(_allies, enemies)),
+            Action::None => (),
         }
     }
 }

@@ -2,7 +2,7 @@
 
 use crate::{
     action::effect::Effect,
-    targeting::target::Target,
+    combatant::combatant::Combatant,
     utils::{
         dice::{beats_dc, Die},
         rollable::Rollable,
@@ -62,7 +62,7 @@ impl Effect for SaveBasedAttack {
         self.nr_targets()
     }
 
-    fn apply<T: Target>(&self, target: &mut T) {
+    fn apply(&self, target: &mut Combatant) {
         let save_modifier: i16 = target.saves().modifier(self.save().save_type());
         let damage = self.roll_save(save_modifier);
         if damage.amount() > 0 {

@@ -54,9 +54,8 @@ impl ActionState {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct ActionSelection {
-    default: Action,
     actions: Vec<StatefulAction>,
 }
 
@@ -66,7 +65,10 @@ impl ActionSelection {
     }
 
     pub fn new(default: Action, actions: Vec<StatefulAction>) -> Self {
-        Self { default, actions }
+        // TODO: currently a workaround until default action refactored away
+        let mut actions: Vec<_> = actions.to_vec();
+        actions.push(StatefulAction::new_with_charges(default, 255));
+        Self { actions }
     }
 
     pub fn update_and_select(&mut self) -> Action {
@@ -75,8 +77,8 @@ impl ActionSelection {
         self.actions.iter_mut().for_each(|a| a.on_turn_start());
         self.actions
             .iter_mut()
-            .find_map(|a| a.available().then(|| a.take()))
-            .unwrap_or(self.default.clone())
+            .find_map(|a: &mut StatefulAction| a.available().then(|| a.take()))
+            .unwrap_or(Action::default())
     }
 }
 

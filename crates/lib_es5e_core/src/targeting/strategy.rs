@@ -1,23 +1,26 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::targeting::target::Target;
+use crate::combatant::combatant::Combatant;
 
 use super::random::TargetRandomStrategy;
 
-pub trait TargetSelectionStrategy<T: Target> {
-    fn select_single_target(&self, targets: &[Rc<RefCell<T>>]) -> Option<Rc<RefCell<T>>>;
+pub trait TargetSelectionStrategy {
+    fn select_single_target(
+        &self,
+        targets: &[Rc<RefCell<Combatant>>],
+    ) -> Option<Rc<RefCell<Combatant>>>;
     fn select_multiple_targets(
         &self,
-        targets: &[Rc<RefCell<T>>],
+        targets: &[Rc<RefCell<Combatant>>],
         max_targets: usize,
-    ) -> Vec<Rc<RefCell<T>>>;
+    ) -> Vec<Rc<RefCell<Combatant>>>;
 }
 
-pub fn target_selection_strategy<T: Target>() -> Box<dyn TargetSelectionStrategy<T>> {
+pub fn target_selection_strategy() -> Box<dyn TargetSelectionStrategy> {
     Box::new(TargetRandomStrategy)
 }
 
-pub(super) fn get_viable_indices<T: Target>(targets: &[Rc<RefCell<T>>]) -> Vec<usize> {
+pub(super) fn get_viable_indices(targets: &[Rc<RefCell<Combatant>>]) -> Vec<usize> {
     targets
         .iter()
         .enumerate()
