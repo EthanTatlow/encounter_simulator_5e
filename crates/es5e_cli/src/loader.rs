@@ -1,18 +1,21 @@
 use lib_es5e_core::utils::save::{Save, SaveType};
-use lib_es5e_core::{action::action, combatant::combatant::Combatant};
-use lib_es5e_core::{action::action::Action, attack::save_based::SaveBasedAttack};
-use lib_es5e_core::{
-    action::action::SingleAction,
-    combat::action_selection::{ActionSelection, StatefulAction},
-};
 use lib_es5e_core::{action::attack::Attack, combatant::defences::save::SaveModifiers};
 use lib_es5e_core::{
     action::negative_effect::negative_effect::NegativeEffect, attack::damage::DamageRoll,
 };
+use lib_es5e_core::{action::single::SingleAction, combat::action_selection::ActionSelection};
+use lib_es5e_core::{
+    action::{action, single::Execution},
+    combatant::combatant::Combatant,
+};
+use lib_es5e_core::{
+    action::{action::Action, multi::MultiAction},
+    attack::save_based::SaveBasedAttack,
+};
 use serde::{Deserialize, Serialize};
-use std::fs;
-use std::path::Path;
 use std::str::FromStr;
+use std::{collections::HashMap, fs};
+use std::{path::Path, rc::Rc};
 
 pub fn load_combatants_from_file(file_path: &Path) -> Vec<Combatant> {
     let contents =
@@ -69,16 +72,22 @@ pub struct ActionSelectionConfig {
     pub special: Vec<StatefulActionConfig>,
 }
 
+fn multiple_actions_to(actions: Vec<ActionConfig>) -> Rc<dyn Action> {
+    Rc::new(MultiAction::new(
+        actions.into_iter().map(|x| x.into()).collect(),
+    ))
+}
+
 impl From<ActionSelectionConfig> for ActionSelection {
     fn from(actions: ActionSelectionConfig) -> Self {
-        ActionSelection::new(
-            Action::Multi(actions.default.into_iter().map(|x| x.into()).collect()),
-            actions
-                .special
-                .into_iter()
-                .map(|a| StatefulAction::from(a))
-                .collect(),
-        )
+        let default_multi = multiple_actions_to(actions.default);
+        let mut actions: Vec<_> = actions
+            .special
+            .into_iter()
+            .map(|x| multiple_actions_to(x.actions))
+            .collect();
+        actions.push(default_multi);
+        ActionSelection { actions }
     }
 }
 
@@ -86,21 +95,7 @@ impl From<ActionSelectionConfig> for ActionSelection {
 pub struct StatefulActionConfig {
     actions: Vec<ActionConfig>,
     recharge: u8,
-}
-
-impl From<StatefulActionConfig> for StatefulAction {
-    fn from(stateful_action: StatefulActionConfig) -> Self {
-        StatefulAction::new_recharge(
-            action::Action::Multi(
-                stateful_action
-                    .actions
-                    .into_iter()
-                    .map(|x| x.into())
-                    .collect(),
-            ),
-            stateful_action.recharge,
-        )
-    }
+    // resource: String
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -120,26 +115,31 @@ pub enum ActionConfig {
     },
 }
 
-impl From<ActionConfig> for action::SingleAction {
+impl From<ActionConfig> for SingleAction {
     fn from(val: ActionConfig) -> Self {
-        match val {
-            ActionConfig::SaveBasedAttack {
-                name: _,
-                save_dc,
-                save_type,
-                targets,
-                damage,
-                half_on_success,
-            } => SingleAction::ApplyNegativeEffect(NegativeEffect::Saveable(SaveBasedAttack::new(
-                Save::new(save_type, save_dc),
-                targets,
-                half_on_success,
-                DamageRoll::from_str(damage.as_str()).unwrap(),
-            ))),
-            ActionConfig::Attack { name: _, atk, dmg } => SingleAction::Attack(Attack::new(
-                atk,
-                DamageRoll::from_str(dmg.as_str()).unwrap(),
-            )),
+        Self {
+            execution: match val {
+                ActionConfig::SaveBasedAttack {
+                    name: _,
+                    save_dc,
+                    save_type,
+                    targets,
+                    damage,
+                    half_on_success,
+                } => {
+                    Execution::ApplyNegativeEffect(NegativeEffect::Saveable(SaveBasedAttack::new(
+                        Save::new(save_type, save_dc),
+                        targets,
+                        half_on_success,
+                        DamageRoll::from_str(damage.as_str()).unwrap(),
+                    )))
+                }
+                ActionConfig::Attack { name: _, atk, dmg } => Execution::Attack(Attack::new(
+                    atk,
+                    DamageRoll::from_str(dmg.as_str()).unwrap(),
+                )),
+            },
+            resource_cost: HashMap::new(), // TODO
         }
     }
 }

@@ -39,7 +39,7 @@ fn main() {
     let repetitions = args.repetitions;
     let encounter = args.load_encounter();
     (0..repetitions)
-        .into_par_iter()
+        .into_iter()
         .for_each(|_| encounter.run(&mut stats.clone()));
 
     stats.print(repetitions);

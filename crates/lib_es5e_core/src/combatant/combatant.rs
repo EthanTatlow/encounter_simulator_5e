@@ -1,41 +1,52 @@
-use std::cmp::min;
+use std::{cmp::min, rc::Rc};
 
 use crate::{
     action::action::Action, attack::damage::Damage, combat::action_selection::ActionSelection,
     combatant::defences::save::SaveModifiers,
 };
 
-#[derive(Clone, Debug)]
-pub struct Stats {
-    hp: u32,
-    ac: i16,
-    saves: SaveModifiers,
-}
+use super::{state::CombatantState, stats::CombatantStats};
 
 #[derive(Clone, Debug)]
 pub struct Combatant {
-    stats: Stats,
+    pub stats: CombatantStats,
+    state: CombatantState,
     action_selection: ActionSelection,
 }
 
 impl Combatant {
-    pub fn new(hp: u32, ac: i16, saves: SaveModifiers, action_selection: ActionSelection) -> Self {
+    pub fn new(
+        max_hp: u32,
+        ac: i16,
+        saves: SaveModifiers,
+        action_selection: ActionSelection,
+    ) -> Self {
         Self {
             action_selection,
-            stats: Stats { hp, ac, saves },
+            stats: CombatantStats {
+                max_hp,
+                ac,
+                saves,
+                initiative: 0, // TODO
+            },
+            state: CombatantState::new(max_hp),
         }
     }
 
-    pub fn take_action(&mut self) -> Action {
-        self.action_selection.update_and_select()
+    pub fn first_available_action(&self) -> Rc<dyn Action> {
+        self.action_selection
+            .actions
+            .iter()
+            .find_map(|x| Some(x.clone())) // TODO: filter
+            .unwrap()
     }
 
     pub fn is_conscious(&self) -> bool {
-        self.stats.hp > 0
+        self.state.hp > 0
     }
 
     pub fn take_damage(&mut self, damage: Damage) {
-        self.stats.hp -= min(damage.amount(), self.stats.hp)
+        self.state.hp -= min(damage.amount(), self.state.hp)
     }
 
     pub fn ac(&self) -> i16 {
@@ -47,6 +58,6 @@ impl Combatant {
     }
 
     pub fn hp(&self) -> u32 {
-        self.stats.hp
+        self.state.hp
     }
 }
