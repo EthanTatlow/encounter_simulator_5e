@@ -1,16 +1,22 @@
-use lib_es5e_core::utils::save::{Save, SaveType};
-use lib_es5e_core::{action::attack::Attack, combatant::defences::save::SaveModifiers};
+use lib_es5e_core::{
+    action::attack::Attack,
+    combatant::{
+        defences::save::SaveModifiers,
+        state::{Recharge, Resource},
+    },
+};
 use lib_es5e_core::{
     action::negative_effect::negative_effect::NegativeEffect, attack::damage::DamageRoll,
 };
+use lib_es5e_core::{action::single::Execution, combatant::combatant::Combatant};
 use lib_es5e_core::{action::single::SingleAction, combat::action_selection::ActionSelection};
-use lib_es5e_core::{
-    action::{action, single::Execution},
-    combatant::combatant::Combatant,
-};
 use lib_es5e_core::{
     action::{action::Action, multi::MultiAction},
     attack::save_based::SaveBasedAttack,
+};
+use lib_es5e_core::{
+    combatant::state::Resources,
+    utils::save::{Save, SaveType},
 };
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
@@ -39,11 +45,13 @@ struct CombatantConfig {
 
 impl From<CombatantConfig> for Combatant {
     fn from(enemy: CombatantConfig) -> Self {
-        Self::new(
+        let (action_selection, resources) = get_action_selection_and_resources(enemy.actions);
+        Self::new_with_saves_and_resources(
             enemy.hp,
             enemy.ac,
+            action_selection,
             SaveModifiers::from(enemy.saves),
-            ActionSelection::from(enemy.actions),
+            resources,
         )
     }
 }
@@ -78,17 +86,54 @@ fn multiple_actions_to(actions: Vec<ActionConfig>) -> Rc<dyn Action> {
     ))
 }
 
-impl From<ActionSelectionConfig> for ActionSelection {
-    fn from(actions: ActionSelectionConfig) -> Self {
-        let default_multi = multiple_actions_to(actions.default);
-        let mut actions: Vec<_> = actions
-            .special
-            .into_iter()
-            .map(|x| multiple_actions_to(x.actions))
-            .collect();
-        actions.push(default_multi);
-        ActionSelection { actions }
-    }
+fn multiple_actions_with_cost(actions: Vec<ActionConfig>, name: String) -> Rc<dyn Action> {
+    let mut resource_cost = HashMap::new();
+    resource_cost.insert(name, 1);
+    let mut actions: Vec<SingleAction> = actions.into_iter().map(|x| x.into()).collect();
+    if !actions.is_empty() {
+        let action = actions.remove(0);
+        actions.insert(
+            0,
+            SingleAction {
+                resource_cost,
+                execution: action.execution.clone(),
+            },
+        );
+    };
+    Rc::new(MultiAction::new(actions))
+}
+
+fn get_action_selection_and_resources(
+    actions: ActionSelectionConfig,
+) -> (ActionSelection, Resources) {
+    let default_multi = multiple_actions_to(actions.default);
+    let resources: Resources = actions
+        .special
+        .iter()
+        .enumerate()
+        .map(|(i, a)| {
+            (
+                i.to_string(),
+                Resource::new(
+                    1,
+                    match a.recharge {
+                        5 => Some(Recharge::Recharge5),
+                        6 => Some(Recharge::Recharge6),
+                        0 => Some(Recharge::TurnStart),
+                        _ => None,
+                    },
+                ),
+            )
+        })
+        .collect();
+    let mut actions: Vec<_> = actions
+        .special
+        .into_iter()
+        .enumerate()
+        .map(|(i, conf)| multiple_actions_with_cost(conf.actions, i.to_string()))
+        .collect();
+    actions.push(default_multi);
+    (ActionSelection { actions }, resources)
 }
 
 #[derive(Debug, Serialize, Deserialize)]

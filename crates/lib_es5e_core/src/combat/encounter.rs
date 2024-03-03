@@ -23,37 +23,11 @@ impl Encounter {
     }
 
     pub fn run<T: Statistics>(&self, stats: &mut T) {
-        let players: Vec<Rc<RefCell<Combatant>>> = self
-            .players
-            .to_vec()
-            .into_iter()
-            .map(|x| Rc::new(RefCell::new(x)))
-            .collect();
-        let enemies: Vec<Rc<RefCell<Combatant>>> = self
-            .enemies
-            .to_vec()
-            .into_iter()
-            .map(|x| Rc::new(RefCell::new(x)))
-            .collect();
+        let players = self.instantiate_for_run(&self.players);
+        let enemies = self.instantiate_for_run(&self.enemies);
 
-        let players_with_relations: Vec<_> = players
-            .to_vec()
-            .into_iter()
-            .map(|combatant| CombatantWithRelations {
-                combatant,
-                allies: players.to_vec(),
-                enemies: enemies.to_vec(),
-            })
-            .collect();
-        let enemies_with_relations: Vec<_> = enemies
-            .to_vec()
-            .into_iter()
-            .map(|combatant| CombatantWithRelations {
-                combatant,
-                allies: enemies.to_vec(),
-                enemies: players.to_vec(),
-            })
-            .collect();
+        let players_with_relations = map_to_combatants_with_relations(&players, &enemies);
+        let enemies_with_relations = map_to_combatants_with_relations(&enemies, &players);
 
         let all_combatants = {
             let mut all = [players_with_relations, enemies_with_relations].concat();
@@ -74,23 +48,52 @@ impl Encounter {
             }
         }
     }
+
+    fn instantiate_for_run(&self, combatants: &[Combatant]) -> Vec<Rc<RefCell<Combatant>>> {
+        let players: Vec<Rc<RefCell<Combatant>>> = combatants
+            .to_vec()
+            .into_iter()
+            .map(|x| Rc::new(RefCell::new(x)))
+            .collect();
+        players
+    }
+}
+
+fn map_to_combatants_with_relations(
+    allies: &[Rc<RefCell<Combatant>>],
+    enemies: &[Rc<RefCell<Combatant>>],
+) -> Vec<CombatantWithRelations> {
+    let players_with_relations: Vec<_> = allies
+        .to_vec()
+        .into_iter()
+        .map(|combatant| CombatantWithRelations {
+            combatant,
+            allies: allies.to_vec(),
+            enemies: enemies.to_vec(),
+        })
+        .collect();
+    players_with_relations
 }
 
 fn run_round(combatants: &[CombatantWithRelations]) {
     for combatant in combatants {
         if combatant.combatant.borrow().is_conscious() {
-            let action = combatant.combatant.borrow().first_available_action();
-            action.execute(&combatant.allies, &combatant.enemies)
+            take_turn(combatant);
         }
     }
 }
 
-//fn take_actions(attackers: &[Rc<RefCell<Combatant>>], targets: &[Rc<RefCell<Combatant>>]) {
-//    let actions: Vec<Box<dyn Action>> = attackers
-//        .iter()
-//        .map(|a| a.borrow_mut().take_action())
-//    actions.iter().for_each(|a| a.execute(attackers, targets));
-//}
+fn take_turn(combatant: &CombatantWithRelations) {
+    combatant.combatant.borrow_mut().update_resources_on_start();
+    let maybe_action = combatant.combatant.borrow().first_available_action();
+    if let Some(action) = maybe_action {
+        action.execute(&combatant.allies, &combatant.enemies);
+        combatant
+            .combatant
+            .borrow_mut()
+            .use_resources(action.as_ref());
+    }
+}
 
 fn all_defeated(combatants: &[Rc<RefCell<Combatant>>]) -> bool {
     combatants.iter().all(|p| !p.borrow().is_conscious())

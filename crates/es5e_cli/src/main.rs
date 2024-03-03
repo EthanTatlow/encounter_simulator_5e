@@ -1,6 +1,5 @@
 use lib_es5e_core::{combat::encounter::Encounter, statistics::Statistics};
 use loader::load_combatants_from_file;
-use rayon::prelude::*;
 use statistics::MultiThreadStatistics;
 use std::path::Path;
 
@@ -9,7 +8,7 @@ use clap::Parser;
 mod loader;
 mod statistics;
 
-/// Combat encounter simulator for DnD 5e to simulate
+/// Combat encounter simulator for DnD 5e to simulate combat encounters
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {

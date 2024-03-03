@@ -5,7 +5,10 @@ use crate::{
     combatant::defences::save::SaveModifiers,
 };
 
-use super::{state::CombatantState, stats::CombatantStats};
+use super::{
+    state::{CombatantState, Resources},
+    stats::CombatantStats,
+};
 
 #[derive(Clone, Debug)]
 pub struct Combatant {
@@ -15,11 +18,12 @@ pub struct Combatant {
 }
 
 impl Combatant {
-    pub fn new(
+    pub fn new_with_saves_and_resources(
         max_hp: u32,
         ac: i16,
-        saves: SaveModifiers,
         action_selection: ActionSelection,
+        saves: SaveModifiers,
+        resources: Resources,
     ) -> Self {
         Self {
             action_selection,
@@ -29,16 +33,33 @@ impl Combatant {
                 saves,
                 initiative: 0, // TODO
             },
-            state: CombatantState::new(max_hp),
+            state: CombatantState::new(max_hp, resources),
         }
     }
 
-    pub fn first_available_action(&self) -> Rc<dyn Action> {
+    pub fn new(
+        max_hp: u32,
+        ac: i16,
+        saves: SaveModifiers,
+        action_selection: ActionSelection,
+    ) -> Self {
+        Self::new_with_saves_and_resources(max_hp, ac, action_selection, saves, Resources::new())
+    }
+
+    pub fn first_available_action(&self) -> Option<Rc<dyn Action>> {
         self.action_selection
             .actions
             .iter()
-            .find_map(|x| Some(x.clone())) // TODO: filter
-            .unwrap()
+            .find(|x| self.state.can_execute(x.as_ref()))
+            .cloned()
+    }
+
+    pub fn update_resources_on_start(&mut self) {
+        self.state.recharge_on_turn_start();
+    }
+
+    pub fn use_resources(&mut self, action: &dyn Action) {
+        self.state.use_resource(action.resource_cost())
     }
 
     pub fn is_conscious(&self) -> bool {
