@@ -2,7 +2,7 @@ use lib_es5e_core::{
     action::attack::Attack,
     combatant::{
         defences::save::SaveModifiers,
-        state::{Recharge, Resource},
+        state::{Recharge, ResourceConfig},
     },
 };
 use lib_es5e_core::{
@@ -114,7 +114,7 @@ fn get_action_selection_and_resources(
         .map(|(i, a)| {
             (
                 i.to_string(),
-                Resource::new(
+                ResourceConfig::new(
                     1,
                     match a.recharge {
                         5 => Some(Recharge::Recharge5),

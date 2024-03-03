@@ -8,23 +8,38 @@ use crate::{
 #[derive(Clone, Debug)]
 pub struct CombatantState {
     pub(crate) hp: u32,
-    constant_resources: Vec<(String, u32)>,
-    recharge5_resources: Vec<(String, u32)>,
-    recharge6_resources: Vec<(String, u32)>,
-    turn_recharge_resources: Vec<(String, u32)>,
+    constant_resources: Vec<Resource>,
+    recharge5_resources: Vec<Resource>,
+    recharge6_resources: Vec<Resource>,
+    turn_recharge_resources: Vec<Resource>,
 }
 
-pub type Resources = HashMap<String, Resource>;
+pub type Resources = HashMap<String, ResourceConfig>;
 
 #[derive(Clone, Debug)]
-pub struct Resource {
+struct Resource {
+    name: String,
     charges: u32,
+    max_charges: u32,
+}
+
+#[derive(Clone, Debug)]
+pub struct ResourceConfig {
+    charges: u32,
+    max_charges: u32,
     recharge: Option<Recharge>,
 }
 
-impl Resource {
+impl ResourceConfig {
     pub fn new(charges: u32, recharge: Option<Recharge>) -> Self {
-        Self { charges, recharge }
+        Self::new_with_max(charges, charges, recharge)
+    }
+    pub fn new_with_max(charges: u32, max_charges: u32, recharge: Option<Recharge>) -> Self {
+        Self {
+            charges,
+            max_charges,
+            recharge,
+        }
     }
 }
 
@@ -48,7 +63,11 @@ impl CombatantState {
                 Some(Recharge::Recharge5) => &mut recharge5_resources, // recharge at start of turn on rolling a 5 or 6 on a 1d6
                 Some(Recharge::Recharge6) => &mut recharge6_resources, // recharge at start of turn on rolling a 6 on a d6
             }
-            .push((name, resource.charges));
+            .push(Resource {
+                name,
+                charges: resource.charges,
+                max_charges: resource.max_charges,
+            });
         }
         Self {
             hp,
@@ -65,16 +84,23 @@ impl CombatantState {
         });
     }
 
-    pub fn find_resource_and_reduce(&mut self, name: &str, cost: u32) {
+    fn find_resource_and_reduce(&mut self, name: &str, cost: u32) {
         let mut resource_types = [
             &mut self.constant_resources,
             &mut self.recharge5_resources,
             &mut self.recharge6_resources,
             &mut self.turn_recharge_resources,
         ];
-        resource_types.iter_mut().for_each(|resources| {
-            if let Some((_, charges)) = resources.iter_mut().find(|(key, _val)| key == name) {
-                *charges -= cost
+        resource_types.iter_mut().any(|resources| {
+            if let Some(resource) = resources.iter_mut().find(|resource| resource.name == name) {
+                if resource.charges >= cost {
+                    resource.charges -= cost;
+                } else {
+                    eprintln!("Tried to use more charges than available for resource {name}");
+                }
+                true
+            } else {
+                false
             }
         });
     }
@@ -89,12 +115,12 @@ impl CombatantState {
         // TODO: skip unnecessary parts / rolls, e.g. by making more modular / adding logic to constructor
         let die_roll = Die::D6.roll();
         if die_roll >= 5 {
-            add_charge(&mut self.recharge5_resources);
+            reset_charge_to_max(&mut self.recharge5_resources);
         }
         if die_roll >= 6 {
-            add_charge(&mut self.recharge6_resources);
+            reset_charge_to_max(&mut self.recharge6_resources);
         }
-        add_charge(&mut self.turn_recharge_resources);
+        reset_charge_to_max(&mut self.turn_recharge_resources);
     }
 
     pub fn can_execute(&self, x: &dyn Action) -> bool {
@@ -104,16 +130,113 @@ impl CombatantState {
             &self.recharge6_resources,
             &self.turn_recharge_resources,
         ];
-        !x.resource_cost().iter().any(|(name, cost)| {
+        !x.resource_cost().iter().any(|(name, &cost)| {
             resource_types.iter().any(|resources| {
                 resources
                     .iter()
-                    .any(|(key, available)| key == name && cost > available)
+                    .any(|resource| resource.name.eq(name) && cost > resource.charges)
             })
         })
     }
 }
 
-fn add_charge(entries: &mut Vec<(String, u32)>) {
-    entries.iter_mut().for_each(|(_, charges)| *charges += 1);
+fn reset_charge_to_max(entries: &mut [Resource]) {
+    entries
+        .iter_mut()
+        .for_each(|resource| resource.charges = resource.max_charges);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::action::action::MockAction;
+    use std::collections::HashMap;
+
+    #[test]
+    fn test_use_resource() {
+        let mut resources = HashMap::new();
+
+        resources.insert("test".to_string(), ResourceConfig::new(5, None));
+        let mut combatant = CombatantState::new(10, resources);
+
+        let mut resource_cost = HashMap::new();
+        resource_cost.insert("test".to_string(), 3);
+
+        let mut mock_action = MockAction::new();
+        mock_action
+            .expect_resource_cost()
+            .return_const(resource_cost.clone());
+
+        assert!(combatant.can_execute(&mock_action));
+        combatant.use_resource(&resource_cost);
+        assert!(!combatant.can_execute(&mock_action));
+    }
+
+    #[test]
+    fn test_recharge_on_turn_start() {
+        let mut resources = HashMap::new();
+
+        resources.insert(
+            "test".to_string(),
+            ResourceConfig::new(1, Some(Recharge::TurnStart)),
+        );
+        let mut combatant = CombatantState::new(10, resources);
+
+        let mut resource_cost = HashMap::new();
+        resource_cost.insert("test".to_string(), 1);
+
+        let mut mock_action = MockAction::new();
+        mock_action
+            .expect_resource_cost()
+            .return_const(resource_cost.clone());
+
+        combatant.use_resource(&resource_cost);
+        assert!(!combatant.can_execute(&mock_action));
+        combatant.recharge_on_turn_start();
+        assert!(combatant.can_execute(&mock_action));
+    }
+
+    #[test]
+    fn test_recharge_on_turn_without_overcharging() {
+        let mut resources = HashMap::new();
+
+        resources.insert(
+            "test".to_string(),
+            ResourceConfig::new(1, Some(Recharge::TurnStart)),
+        );
+        let mut combatant = CombatantState::new(10, resources);
+
+        let mut resource_cost = HashMap::new();
+        resource_cost.insert("test".to_string(), 1);
+
+        let mut mock_action = MockAction::new();
+        mock_action
+            .expect_resource_cost()
+            .return_const(resource_cost.clone());
+
+        combatant.recharge_on_turn_start();
+        assert!(combatant.can_execute(&mock_action));
+        combatant.use_resource(&resource_cost);
+        assert!(!combatant.can_execute(&mock_action));
+    }
+
+    #[test]
+    fn test_using_unavailable_resource() {
+        let mut resources = HashMap::new();
+
+        resources.insert("test".to_string(), ResourceConfig::new(1, None));
+        let mut combatant = CombatantState::new(10, resources);
+
+        let mut resource_cost = HashMap::new();
+        resource_cost.insert("test".to_string(), 2);
+
+        let mut mock_action = MockAction::new();
+        mock_action
+            .expect_resource_cost()
+            .return_const(resource_cost.clone());
+
+        assert!(!combatant.can_execute(&mock_action));
+
+        combatant.use_resource(&resource_cost);
+    }
 }
