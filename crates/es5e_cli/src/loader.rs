@@ -1,32 +1,30 @@
 use lib_es5e_core::{
     action::attack::Attack,
     combatant::{
+        config::CombatantConfig,
         defences::save::SaveModifiers,
         state::{Recharge, ResourceConfig},
     },
 };
+use lib_es5e_core::{action::multi::MultiAction, attack::save_based::SaveBasedAttack};
 use lib_es5e_core::{
     action::negative_effect::negative_effect::NegativeEffect, attack::damage::DamageRoll,
 };
-use lib_es5e_core::{action::single::Execution, combatant::combatant::Combatant};
-use lib_es5e_core::{action::single::SingleAction, combat::action_selection::ActionSelection};
-use lib_es5e_core::{
-    action::{action::Action, multi::MultiAction},
-    attack::save_based::SaveBasedAttack,
-};
+use lib_es5e_core::{action::single::Execution, combatant::config::ActionType};
+use lib_es5e_core::{action::single::SingleAction, combatant::stats::CombatantStats};
 use lib_es5e_core::{
     combatant::state::Resources,
     utils::save::{Save, SaveType},
 };
 use serde::{Deserialize, Serialize};
+use std::path::Path;
 use std::str::FromStr;
 use std::{collections::HashMap, fs};
-use std::{path::Path, rc::Rc};
 
-pub fn load_combatants_from_file(file_path: &Path) -> Vec<Combatant> {
+pub fn load_combatants_from_file(file_path: &Path) -> Vec<CombatantConfig> {
     let contents =
         fs::read_to_string(file_path).expect(format!("{file_path:?} not found").as_str());
-    let values: Vec<CombatantConfig> = serde_yaml::from_str(contents.as_str())
+    let values: Vec<CombatantDto> = serde_yaml::from_str(contents.as_str())
         .expect(format!("Unable to parse {file_path:?}").as_str());
     let nr_combatants = values.len();
     println!("Combatants loaded from {file_path:?}: {nr_combatants}");
@@ -35,29 +33,32 @@ pub fn load_combatants_from_file(file_path: &Path) -> Vec<Combatant> {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct CombatantConfig {
+struct CombatantDto {
     pub name: String,
     pub hp: u32,
     pub ac: i16,
-    pub saves: SavesConfig,
-    pub actions: ActionSelectionConfig,
+    pub saves: SaveModifiersDto,
+    pub actions: ActionSelectionDto,
 }
 
-impl From<CombatantConfig> for Combatant {
-    fn from(enemy: CombatantConfig) -> Self {
-        let (action_selection, resources) = get_action_selection_and_resources(enemy.actions);
-        Self::new_with_saves_and_resources(
-            enemy.hp,
-            enemy.ac,
-            action_selection,
-            SaveModifiers::from(enemy.saves),
+impl From<CombatantDto> for CombatantConfig {
+    fn from(dto: CombatantDto) -> Self {
+        let (actions, resources) = get_action_selection_and_resources(dto.actions);
+        Self {
             resources,
-        )
+            actions,
+            stats: CombatantStats {
+                max_hp: dto.hp,
+                ac: dto.ac,
+                initiative: 0, // TODO: fix
+                saves: dto.saves.into(),
+            },
+        }
     }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct SavesConfig {
+pub struct SaveModifiersDto {
     pub str: i16,
     pub dex: i16,
     pub con: i16,
@@ -66,8 +67,8 @@ pub struct SavesConfig {
     pub cha: i16,
 }
 
-impl From<SavesConfig> for SaveModifiers {
-    fn from(saves: SavesConfig) -> Self {
+impl From<SaveModifiersDto> for SaveModifiers {
+    fn from(saves: SaveModifiersDto) -> Self {
         SaveModifiers::new(
             saves.str, saves.dex, saves.con, saves.int, saves.wis, saves.cha,
         )
@@ -75,18 +76,18 @@ impl From<SavesConfig> for SaveModifiers {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct ActionSelectionConfig {
-    pub default: Vec<ActionConfig>,
-    pub special: Vec<StatefulActionConfig>,
+pub struct ActionSelectionDto {
+    pub default: Vec<ActionDto>,
+    pub special: Vec<RechargeActionDto>,
 }
 
-fn multiple_actions_to(actions: Vec<ActionConfig>) -> Rc<dyn Action> {
-    Rc::new(MultiAction::new(
+fn into_multi_action(actions: Vec<ActionDto>) -> ActionType {
+    ActionType::MultiAction(MultiAction::new(
         actions.into_iter().map(|x| x.into()).collect(),
     ))
 }
 
-fn multiple_actions_with_cost(actions: Vec<ActionConfig>, name: String) -> Rc<dyn Action> {
+fn multiple_actions_with_cost(actions: Vec<ActionDto>, name: String) -> ActionType {
     let mut resource_cost = HashMap::new();
     resource_cost.insert(name, 1);
     let mut actions: Vec<SingleAction> = actions.into_iter().map(|x| x.into()).collect();
@@ -100,13 +101,11 @@ fn multiple_actions_with_cost(actions: Vec<ActionConfig>, name: String) -> Rc<dy
             },
         );
     };
-    Rc::new(MultiAction::new(actions))
+    ActionType::MultiAction(MultiAction::new(actions))
 }
 
-fn get_action_selection_and_resources(
-    actions: ActionSelectionConfig,
-) -> (ActionSelection, Resources) {
-    let default_multi = multiple_actions_to(actions.default);
+fn get_action_selection_and_resources(actions: ActionSelectionDto) -> (Vec<ActionType>, Resources) {
+    let default_multi = into_multi_action(actions.default);
     let resources: Resources = actions
         .special
         .iter()
@@ -133,18 +132,17 @@ fn get_action_selection_and_resources(
         .map(|(i, conf)| multiple_actions_with_cost(conf.actions, i.to_string()))
         .collect();
     actions.push(default_multi);
-    (ActionSelection { actions }, resources)
+    (actions, resources)
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct StatefulActionConfig {
-    actions: Vec<ActionConfig>,
+pub struct RechargeActionDto {
+    actions: Vec<ActionDto>,
     recharge: u8,
-    // resource: String
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub enum ActionConfig {
+pub enum ActionDto {
     Attack {
         name: String,
         atk: i16,
@@ -160,11 +158,11 @@ pub enum ActionConfig {
     },
 }
 
-impl From<ActionConfig> for SingleAction {
-    fn from(val: ActionConfig) -> Self {
+impl From<ActionDto> for SingleAction {
+    fn from(val: ActionDto) -> Self {
         Self {
             execution: match val {
-                ActionConfig::SaveBasedAttack {
+                ActionDto::SaveBasedAttack {
                     name: _,
                     save_dc,
                     save_type,
@@ -179,7 +177,7 @@ impl From<ActionConfig> for SingleAction {
                         DamageRoll::from_str(damage.as_str()).unwrap(),
                     )))
                 }
-                ActionConfig::Attack { name: _, atk, dmg } => Execution::Attack(Attack::new(
+                ActionDto::Attack { name: _, atk, dmg } => Execution::Attack(Attack::new(
                     atk,
                     DamageRoll::from_str(dmg.as_str()).unwrap(),
                 )),
@@ -191,9 +189,9 @@ impl From<ActionConfig> for SingleAction {
 
 #[cfg(test)]
 mod test {
-    use lib_es5e_core::combatant::combatant::Combatant;
+    use lib_es5e_core::combatant::config::CombatantConfig;
 
-    use crate::loader::CombatantConfig;
+    use crate::loader::CombatantDto;
 
     // Note: the API is currently very volatile, so more detailed tests are omitted for the time being
     #[test]
@@ -232,9 +230,9 @@ mod test {
               half_on_success: true
     ";
 
-        let combatants: Vec<CombatantConfig> =
+        let combatants: Vec<CombatantDto> =
             serde_yaml::from_str(yaml).expect("unable to parse test data");
-        let part: Vec<Combatant> = combatants.into_iter().map(|e| e.into()).collect();
+        let part: Vec<CombatantConfig> = combatants.into_iter().map(|e| e.into()).collect();
         assert_eq!(part.len(), 1);
     }
 }

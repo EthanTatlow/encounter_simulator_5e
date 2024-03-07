@@ -1,9 +1,9 @@
+use clap::Parser;
 use lib_es5e_core::{combat::encounter::Encounter, statistics::Statistics};
 use loader::load_combatants_from_file;
+use rayon::prelude::*;
 use statistics::MultiThreadStatistics;
 use std::path::Path;
-
-use clap::Parser;
 
 mod loader;
 mod statistics;
@@ -38,7 +38,7 @@ fn main() {
     let repetitions = args.repetitions;
     let encounter = args.load_encounter();
     (0..repetitions)
-        .into_iter()
+        .into_par_iter()
         .for_each(|_| encounter.run(&mut stats.clone()));
 
     stats.print(repetitions);

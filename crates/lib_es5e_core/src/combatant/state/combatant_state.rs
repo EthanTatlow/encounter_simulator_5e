@@ -103,9 +103,11 @@ impl CombatantState {
 
 #[cfg(test)]
 mod tests {
+    use mockall::mock;
+
     use super::*;
-    use crate::{action::action::MockAction, combatant::state::ResourceConfig};
-    use std::collections::HashMap;
+    use crate::combatant::{combatant::Combatant, state::ResourceConfig};
+    use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
     #[test]
     fn test_use_resource() {
@@ -193,5 +195,16 @@ mod tests {
         assert!(!combatant.can_execute(&mock_action));
 
         combatant.use_resource(&resource_cost);
+    }
+
+    mock! {
+        Action {}
+        impl Action for Action {
+            fn execute(&self, _allies: &[Rc<RefCell<Combatant>>], enemies: &[Rc<RefCell<Combatant>>]);
+            fn resource_cost(&self) -> &HashMap<String, u32>;
+        }
+        impl Clone for Action {
+            fn clone(&self) -> Self;
+        }
     }
 }

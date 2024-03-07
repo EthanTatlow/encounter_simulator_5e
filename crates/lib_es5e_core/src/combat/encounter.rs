@@ -2,12 +2,15 @@ use std::{cell::RefCell, rc::Rc};
 
 use rand::{seq::SliceRandom, thread_rng};
 
-use crate::{combatant::combatant::Combatant, statistics::Statistics};
+use crate::{
+    combatant::{combatant::Combatant, config::CombatantConfig},
+    statistics::Statistics,
+};
 
 #[derive(Debug, Clone)]
 pub struct Encounter {
-    players: Vec<Combatant>,
-    enemies: Vec<Combatant>,
+    players: Vec<CombatantConfig>,
+    enemies: Vec<CombatantConfig>,
 }
 
 #[derive(Debug, Clone)]
@@ -18,7 +21,7 @@ pub struct CombatantWithRelations {
 }
 
 impl Encounter {
-    pub fn new(players: Vec<Combatant>, enemies: Vec<Combatant>) -> Encounter {
+    pub fn new(players: Vec<CombatantConfig>, enemies: Vec<CombatantConfig>) -> Encounter {
         Encounter { players, enemies }
     }
 
@@ -49,13 +52,11 @@ impl Encounter {
         }
     }
 
-    fn instantiate_for_run(&self, combatants: &[Combatant]) -> Vec<Rc<RefCell<Combatant>>> {
-        let players: Vec<Rc<RefCell<Combatant>>> = combatants
-            .to_vec()
-            .into_iter()
-            .map(|x| Rc::new(RefCell::new(x)))
-            .collect();
-        players
+    fn instantiate_for_run(&self, combatants: &[CombatantConfig]) -> Vec<Rc<RefCell<Combatant>>> {
+        combatants
+            .iter()
+            .map(|x| Rc::new(RefCell::new(x.to_combatant())))
+            .collect()
     }
 }
 
