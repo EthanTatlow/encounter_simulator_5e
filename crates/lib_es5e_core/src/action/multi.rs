@@ -1,6 +1,7 @@
-use std::{cell::RefCell, collections::HashMap, rc::Rc};
+use std::{collections::HashMap};
+use crate::combat::encounter::IntMutCombatant;
 
-use crate::combatant::combatant::Combatant;
+
 
 use super::{action::Action, single::SingleAction};
 
@@ -27,7 +28,7 @@ impl MultiAction {
 }
 
 impl Action for MultiAction {
-    fn execute(&self, allies: &[Rc<RefCell<Combatant>>], enemies: &[Rc<RefCell<Combatant>>]) {
+    fn execute(&self, allies: &[IntMutCombatant], enemies: &[IntMutCombatant]) {
         self.actions
             .iter()
             .for_each(|action| action.execute(allies, enemies));

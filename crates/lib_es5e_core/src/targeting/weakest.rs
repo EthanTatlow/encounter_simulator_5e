@@ -1,8 +1,9 @@
-use std::cell::RefCell;
 
-use std::rc::Rc;
+
+
 
 use std::cmp::Ordering;
+use crate::combat::encounter::IntMutCombatant;
 
 use crate::combatant::combatant::Combatant;
 
@@ -44,8 +45,8 @@ where
 {
     fn select_single_target(
         &self,
-        targets: &[Rc<RefCell<Combatant>>],
-    ) -> Option<Rc<RefCell<Combatant>>> {
+        targets: &[IntMutCombatant],
+    ) -> Option<IntMutCombatant> {
         targets
             .into_iter()
             .filter(|target| target.borrow().is_conscious())
@@ -55,9 +56,9 @@ where
 
     fn select_multiple_targets(
         &self,
-        targets: &[Rc<RefCell<Combatant>>],
+        targets: &[IntMutCombatant],
         max_targets: usize,
-    ) -> Vec<Rc<RefCell<Combatant>>> {
+    ) -> Vec<IntMutCombatant> {
         let mut targets_to_sort: Vec<_> = targets
             .iter()
             .filter(|target| target.borrow().is_conscious())

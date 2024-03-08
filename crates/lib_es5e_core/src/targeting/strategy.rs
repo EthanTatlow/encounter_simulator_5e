@@ -1,26 +1,24 @@
-use std::{cell::RefCell, rc::Rc};
-
-use crate::combatant::combatant::Combatant;
+use crate::combat::encounter::IntMutCombatant;
 
 use super::random::TargetRandomStrategy;
 
 pub trait TargetSelectionStrategy {
     fn select_single_target(
         &self,
-        targets: &[Rc<RefCell<Combatant>>],
-    ) -> Option<Rc<RefCell<Combatant>>>;
+        targets: &[IntMutCombatant],
+    ) -> Option<IntMutCombatant>;
     fn select_multiple_targets(
         &self,
-        targets: &[Rc<RefCell<Combatant>>],
+        targets: &[IntMutCombatant],
         max_targets: usize,
-    ) -> Vec<Rc<RefCell<Combatant>>>;
+    ) -> Vec<IntMutCombatant>;
 }
 
 pub fn target_selection_strategy() -> Box<dyn TargetSelectionStrategy> {
     Box::new(TargetRandomStrategy)
 }
 
-pub(super) fn get_viable_indices(targets: &[Rc<RefCell<Combatant>>]) -> Vec<usize> {
+pub(super) fn get_viable_indices(targets: &[IntMutCombatant]) -> Vec<usize> {
     targets
         .iter()
         .enumerate()
@@ -34,11 +32,12 @@ pub(super) mod tests {
     use std::rc::Rc;
 
     use crate::combat::action_selection::ActionSelection;
+    use crate::combat::encounter::IntMutCombatant;
     use crate::combatant::combatant::Combatant;
     use crate::combatant::defences::save::SaveModifiers;
     use crate::targeting::strategy::{get_viable_indices, TargetSelectionStrategy};
 
-    pub fn init_identical_test_targets(nr_targets: usize) -> Vec<Rc<RefCell<Combatant>>> {
+    pub fn init_identical_test_targets(nr_targets: usize) -> Vec<IntMutCombatant> {
         (0..nr_targets)
             .into_iter()
             .map(|_| {

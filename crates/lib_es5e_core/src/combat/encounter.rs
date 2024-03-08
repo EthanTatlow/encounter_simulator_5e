@@ -12,10 +12,12 @@ pub struct Encounter {
     enemies: Vec<CombatantConfig>,
 }
 
+pub type IntMutCombatant = Rc<RefCell<Combatant>>;
+
 pub struct CombatantWithRelations {
-    combatant: Rc<RefCell<Combatant>>,
-    allies: Vec<Rc<RefCell<Combatant>>>,
-    enemies: Vec<Rc<RefCell<Combatant>>>,
+    combatant: IntMutCombatant,
+    allies: Vec<IntMutCombatant>,
+    enemies: Vec<IntMutCombatant>,
 }
 
 impl Encounter {
@@ -42,7 +44,7 @@ impl Encounter {
         }
     }
 
-    fn setup_combatants(&self, players: &Vec<Rc<RefCell<Combatant>>>, enemies: &Vec<Rc<RefCell<Combatant>>>) -> Vec<CombatantWithRelations> {
+    fn setup_combatants(&self, players: &Vec<IntMutCombatant>, enemies: &Vec<IntMutCombatant>) -> Vec<CombatantWithRelations> {
         let players_with_relations = map_to_combatants_with_relations(players, enemies);
         let mut enemies_with_relations = map_to_combatants_with_relations(enemies, players);
 
@@ -52,7 +54,7 @@ impl Encounter {
         all_combatants
     }
 
-    fn instantiate_for_run(&self, combatants: &[CombatantConfig]) -> Vec<Rc<RefCell<Combatant>>> {
+    fn instantiate_for_run(&self, combatants: &[CombatantConfig]) -> Vec<IntMutCombatant> {
         combatants
             .iter()
             .map(|x| Rc::new(RefCell::new(x.to_combatant())))
@@ -61,8 +63,8 @@ impl Encounter {
 }
 
 fn map_to_combatants_with_relations(
-    allies: &[Rc<RefCell<Combatant>>],
-    enemies: &[Rc<RefCell<Combatant>>],
+    allies: &[IntMutCombatant],
+    enemies: &[IntMutCombatant],
 ) -> Vec<CombatantWithRelations> {
     let allies_with_relations: Vec<_> = allies
         .to_vec()
@@ -96,11 +98,11 @@ fn take_turn(combatant: &CombatantWithRelations) {
     }
 }
 
-fn all_defeated(combatants: &[Rc<RefCell<Combatant>>]) -> bool {
+fn all_defeated(combatants: &[IntMutCombatant]) -> bool {
     combatants.iter().all(|p| !p.borrow().is_conscious())
 }
 
-fn count_survivors(combatants: &[Rc<RefCell<Combatant>>]) -> usize {
+fn count_survivors(combatants: &[IntMutCombatant]) -> usize {
     combatants
         .iter()
         .filter(|p| p.borrow().is_conscious())

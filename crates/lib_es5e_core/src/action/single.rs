@@ -1,6 +1,7 @@
-use std::{cell::RefCell, collections::HashMap, rc::Rc};
+use std::{collections::HashMap};
 
 use crate::{combatant::combatant::Combatant, targeting::strategy::target_selection_strategy};
+use crate::combat::encounter::IntMutCombatant;
 
 use super::{
     action::Action, attack::Attack, effect::Effect,
@@ -20,7 +21,7 @@ pub enum Execution {
 }
 
 impl Action for SingleAction {
-    fn execute(&self, _allies: &[Rc<RefCell<Combatant>>], enemies: &[Rc<RefCell<Combatant>>]) {
+    fn execute(&self, _allies: &[IntMutCombatant], enemies: &[IntMutCombatant]) {
         let strategy = target_selection_strategy();
         match &self.execution {
             Execution::ApplyNegativeEffect(effect) => strategy
