@@ -37,7 +37,7 @@ impl SaveBasedAttack {
 
     pub fn roll_save(&self, save_bonus: i16) -> Damage {
         let roll = Die::D20.roll();
-        let take_full_damage = !beats_dc(roll as i16, self.save.dc() as i16 - save_bonus);
+        let take_full_damage = !beats_dc(roll as i16, self.save.dc() - save_bonus);
 
         if take_full_damage {
             self.damage.calculate_regular()
