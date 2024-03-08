@@ -37,6 +37,7 @@ struct CombatantDto {
     pub name: String,
     pub hp: u32,
     pub ac: i16,
+    pub init: i16,
     pub saves: SaveModifiersDto,
     pub actions: ActionSelectionDto,
 }
@@ -50,7 +51,7 @@ impl From<CombatantDto> for CombatantConfig {
             stats: CombatantStats {
                 max_hp: dto.hp,
                 ac: dto.ac,
-                initiative: 0, // TODO: fix
+                initiative: dto.init,
                 saves: dto.saves.into(),
             },
         }
@@ -200,6 +201,7 @@ mod test {
   - name: dragon
     hp: 367
     ac: 22
+    init: 1
     saves:
       str: 8
       dex: 9

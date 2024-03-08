@@ -1,11 +1,11 @@
 use std::{cell::RefCell, rc::Rc};
 
-use rand::{seq::SliceRandom, thread_rng};
-
 use crate::{
     combatant::{combatant::Combatant, config::CombatantConfig},
     statistics::Statistics,
 };
+use crate::utils::dice::Die::D20;
+use crate::utils::rollable::Rollable;
 
 pub struct Encounter {
     players: Vec<CombatantConfig>,
@@ -48,7 +48,7 @@ impl Encounter {
 
         let mut all_combatants = players_with_relations;
         all_combatants.append(&mut enemies_with_relations);
-        all_combatants.shuffle(&mut thread_rng()); // note: not entirely random -> TODO: implement initiative
+        all_combatants.sort_by_key(|x| -(D20.roll() as i16 + x.combatant.borrow().stats.initiative));
         all_combatants
     }
 

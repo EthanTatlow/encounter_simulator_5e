@@ -1,6 +1,8 @@
 - name: dragon
+  name: dragon
   hp: 367
-  ac: 22
+  ac: 1
+  init: 2
   saves:
     str: 8
     dex: 9
@@ -26,6 +28,6 @@
             name: breath weapon
             save_dc: 22
             save_type: !DEX
-            targets: 3
+            targets: 10
             damage: 15d8
             half_on_success: true

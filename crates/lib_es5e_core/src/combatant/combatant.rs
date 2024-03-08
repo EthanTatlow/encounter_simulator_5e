@@ -21,6 +21,7 @@ impl Combatant {
     pub fn new_with_saves_and_resources(
         max_hp: u32,
         ac: i16,
+        initiative: i16,
         action_selection: ActionSelection,
         saves: SaveModifiers,
         resources: Resources,
@@ -31,7 +32,7 @@ impl Combatant {
                 max_hp,
                 ac,
                 saves,
-                initiative: 0, // TODO
+                initiative,
             },
             state: CombatantState::new(max_hp, resources),
         }
@@ -40,10 +41,11 @@ impl Combatant {
     pub fn new(
         max_hp: u32,
         ac: i16,
+        init: i16,
         saves: SaveModifiers,
         action_selection: ActionSelection,
     ) -> Self {
-        Self::new_with_saves_and_resources(max_hp, ac, action_selection, saves, Resources::new())
+        Self::new_with_saves_and_resources(max_hp, ac, init, action_selection, saves, Resources::new())
     }
 
     pub fn first_available_action(&self) -> Option<Rc<dyn Action>> {

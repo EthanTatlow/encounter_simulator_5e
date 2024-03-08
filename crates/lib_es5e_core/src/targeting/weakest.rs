@@ -91,6 +91,7 @@ mod test {
                 Rc::new(RefCell::new(Combatant::new(
                     hp,
                     10,
+                    0,
                     SaveModifiers::default(),
                     ActionSelection::default(),
                 )))
@@ -112,6 +113,7 @@ mod test {
                 Rc::new(RefCell::new(Combatant::new(
                     42,
                     ac,
+                    0,
                     SaveModifiers::default(),
                     ActionSelection::default(),
                 )))

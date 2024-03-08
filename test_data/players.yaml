@@ -1,6 +1,7 @@
 - name: julius
   hp: 89
   ac: 21
+  init: 2
   saves:
     str: 0
     dex: 9
@@ -31,6 +32,7 @@
 - name: rittersporn
   hp: 75
   ac: 16
+  init: 6
   saves:
     str: 0
     dex: 9
@@ -62,6 +64,7 @@
 - name: olaf
   hp: 298
   ac: 17
+  init: 2
   saves:
     str: 10
     dex: 2
@@ -82,6 +85,7 @@
 - name: adran
   hp: 120
   ac: 17
+  init: 1
   saves:
     str: 0
     dex: 3
@@ -120,6 +124,7 @@
 - name: tarik
   hp: 157
   ac: 18
+  init: 5
   saves:
     str: 0
     dex: 3

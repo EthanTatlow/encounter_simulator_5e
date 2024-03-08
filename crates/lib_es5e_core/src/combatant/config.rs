@@ -34,6 +34,7 @@ impl CombatantConfig {
         Combatant::new_with_saves_and_resources(
             self.stats.max_hp,
             self.stats.ac,
+            self.stats.initiative,
             action_selection,
             self.stats.saves.clone(),
             self.resources.clone(),
