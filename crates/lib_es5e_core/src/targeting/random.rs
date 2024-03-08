@@ -41,3 +41,21 @@ impl TargetSelectionStrategy for TargetRandomStrategy {
             .collect()
     }
 }
+
+
+
+#[cfg(test)]
+mod tests {
+    use crate::targeting::random::TargetRandomStrategy;
+    use crate::targeting::strategy::tests::{test_select_as_many_targets_as_specified, test_selecting_too_many_targets_returns_all};
+
+    #[test]
+    fn selecting_too_many_targets_returns_all() {
+        test_selecting_too_many_targets_returns_all(TargetRandomStrategy);
+    }
+
+    #[test]
+    fn select_as_many_targets_as_specified() {
+        test_select_as_many_targets_as_specified(TargetRandomStrategy);
+    }
+}

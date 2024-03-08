@@ -82,6 +82,8 @@ mod test {
             weakest::{AcAspect, HpAspect, TargetWeakestStrategy},
         },
     };
+    
+    use crate::targeting::strategy::tests::{test_select_as_many_targets_as_specified, test_selecting_too_many_targets_returns_all};
 
     #[test]
     fn select_weakest_hp_discounting_unconscious() {
@@ -128,5 +130,16 @@ mod test {
         assert_eq!(2, selected.len());
         assert_eq!(selected.get(0).unwrap().borrow().ac(), 1);
         assert_eq!(selected.get(1).unwrap().borrow().ac(), 2);
+    }
+
+    #[test]
+    fn selecting_too_many_targets_returns_all() {
+        test_selecting_too_many_targets_returns_all(TargetWeakestStrategy { aspect: AcAspect })
+
+    }
+
+    #[test]
+    fn select_as_many_targets_as_specified() {
+        test_select_as_many_targets_as_specified(TargetWeakestStrategy { aspect: AcAspect })
     }
 }
