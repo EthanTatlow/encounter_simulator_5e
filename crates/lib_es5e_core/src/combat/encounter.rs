@@ -7,13 +7,11 @@ use crate::{
     statistics::Statistics,
 };
 
-#[derive(Debug, Clone)]
 pub struct Encounter {
     players: Vec<CombatantConfig>,
     enemies: Vec<CombatantConfig>,
 }
 
-#[derive(Debug, Clone)]
 pub struct CombatantWithRelations {
     combatant: Rc<RefCell<Combatant>>,
     allies: Vec<Rc<RefCell<Combatant>>>,
@@ -28,15 +26,7 @@ impl Encounter {
     pub fn run<T: Statistics>(&self, stats: &mut T) {
         let players = self.instantiate_for_run(&self.players);
         let enemies = self.instantiate_for_run(&self.enemies);
-
-        let players_with_relations = map_to_combatants_with_relations(&players, &enemies);
-        let enemies_with_relations = map_to_combatants_with_relations(&enemies, &players);
-
-        let all_combatants = {
-            let mut all = [players_with_relations, enemies_with_relations].concat();
-            all.shuffle(&mut thread_rng()); // note: not entirely random -> TODO: implement initiative
-            all
-        };
+        let all_combatants = self.setup_combatants(&players, &enemies);
 
         loop {
             run_round(&all_combatants);
@@ -52,6 +42,16 @@ impl Encounter {
         }
     }
 
+    fn setup_combatants(&self, players: &Vec<Rc<RefCell<Combatant>>>, enemies: &Vec<Rc<RefCell<Combatant>>>) -> Vec<CombatantWithRelations> {
+        let players_with_relations = map_to_combatants_with_relations(players, enemies);
+        let mut enemies_with_relations = map_to_combatants_with_relations(enemies, players);
+
+        let mut all_combatants = players_with_relations;
+        all_combatants.append(&mut enemies_with_relations);
+        all_combatants.shuffle(&mut thread_rng()); // note: not entirely random -> TODO: implement initiative
+        all_combatants
+    }
+
     fn instantiate_for_run(&self, combatants: &[CombatantConfig]) -> Vec<Rc<RefCell<Combatant>>> {
         combatants
             .iter()
@@ -64,7 +64,7 @@ fn map_to_combatants_with_relations(
     allies: &[Rc<RefCell<Combatant>>],
     enemies: &[Rc<RefCell<Combatant>>],
 ) -> Vec<CombatantWithRelations> {
-    let players_with_relations: Vec<_> = allies
+    let allies_with_relations: Vec<_> = allies
         .to_vec()
         .into_iter()
         .map(|combatant| CombatantWithRelations {
@@ -73,7 +73,7 @@ fn map_to_combatants_with_relations(
             enemies: enemies.to_vec(),
         })
         .collect();
-    players_with_relations
+    allies_with_relations
 }
 
 fn run_round(combatants: &[CombatantWithRelations]) {
