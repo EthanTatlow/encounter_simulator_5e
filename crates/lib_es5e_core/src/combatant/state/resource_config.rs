@@ -6,9 +6,9 @@ pub type ResourceKey = usize;
 
 #[derive(Clone, Debug)]
 pub struct ResourceCfg {
-    pub(super) charges: u32,
-    pub(super) max_charges: u32,
-    pub(super) recharge: Option<Recharge>,
+    pub charges: u32,
+    pub max_charges: u32,
+    pub recharge: Option<Recharge>,
 }
 
 impl ResourceCfg {

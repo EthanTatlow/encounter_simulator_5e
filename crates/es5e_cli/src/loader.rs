@@ -1,4 +1,4 @@
-use crate::rules::{CharacterLvl, Class};
+use crate::rules::{CharacterLvl, Class, SpellLvl};
 use lib_es5e_core::{
     action::attack::Attack,
     combatant::{
@@ -40,14 +40,14 @@ struct CombatantDto {
     pub ac: i16,
     pub init: i16,
     // Note: currently only used for spell slots
-    pub character_lvl: Option<(Class, CharacterLvl)>,
+    pub class_lvl: Option<(Class, CharacterLvl)>,
     pub saves: SaveModifiersDto,
     pub actions: ActionSelectionDto,
 }
 
 impl From<CombatantDto> for CombatantConfig {
     fn from(dto: CombatantDto) -> Self {
-        let (actions, resources) = get_action_selection_and_resources(dto.actions);
+        let (actions, resources) = get_action_selection_and_resources(dto.actions, dto.class_lvl);
         Self {
             resources,
             actions,
@@ -110,9 +110,10 @@ fn multiple_actions_with_cost(actions: Vec<ActionDto>, name: usize) -> ActionTyp
 
 fn get_action_selection_and_resources(
     actions: ActionSelectionDto,
+    class_level: Option<(Class, CharacterLvl)>,
 ) -> (Vec<ActionType>, ResourceCfgs) {
     let default_multi = into_multi_action(actions.default);
-    let resources: ResourceCfgs = actions
+    let mut resources: ResourceCfgs = actions
         .special
         .iter()
         .enumerate()
@@ -131,6 +132,15 @@ fn get_action_selection_and_resources(
             )
         })
         .collect();
+    if let Some((class, lvl)) = class_level {
+        let spell_slots = class.spell_slots_for_char_lvl(lvl);
+        spell_slots.into_iter().for_each(|(spell_lvl, charges)| {
+            resources.insert(
+                spell_lvl_to_resource_key(spell_lvl),
+                ResourceCfg::new(charges, None),
+            );
+        });
+    }
     let mut actions: Vec<_> = actions
         .special
         .into_iter()
@@ -139,6 +149,22 @@ fn get_action_selection_and_resources(
         .collect();
     actions.push(default_multi);
     (actions, resources)
+}
+
+const BASE_SPELL_SLOT_KEY: usize = 1000;
+const fn spell_lvl_to_resource_key(spell_lvl: SpellLvl) -> usize {
+    BASE_SPELL_SLOT_KEY
+        + match spell_lvl {
+            SpellLvl::Lvl1 => 1,
+            SpellLvl::Lvl2 => 2,
+            SpellLvl::Lvl3 => 3,
+            SpellLvl::Lvl4 => 4,
+            SpellLvl::Lvl5 => 5,
+            SpellLvl::Lvl6 => 6,
+            SpellLvl::Lvl7 => 7,
+            SpellLvl::Lvl8 => 8,
+            SpellLvl::Lvl9 => 9,
+        }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -197,9 +223,10 @@ impl From<ActionDto> for SingleAction {
 mod test {
     use lib_es5e_core::combatant::config::CombatantConfig;
 
-    use crate::loader::CombatantDto;
-    use crate::rules::CharacterLvl;
-    use crate::rules::Class::Druid;
+    use crate::{
+        loader::{spell_lvl_to_resource_key, CombatantDto},
+        rules::SpellLvl,
+    };
 
     // Note: the API is currently very volatile, so more detailed tests are omitted for the time being
     #[test]
@@ -236,9 +263,7 @@ mod test {
               save_type: !DEX
               targets: 3
               damage: 15d8
-              half_on_success: true
-    ";
-
+              half_on_success: true";
         let combatants: Vec<CombatantDto> =
             serde_yaml::from_str(yaml).expect("unable to parse test data");
         let part: Vec<CombatantConfig> = combatants.into_iter().map(|e| e.into()).collect();
@@ -253,7 +278,7 @@ mod test {
     hp: 367
     ac: 22
     init: 1
-    character_lvl: [Druid, Lvl5]
+    class_lvl: [Druid, Lvl5]
     saves:
       str: 8
       dex: 9
@@ -272,19 +297,33 @@ mod test {
               save_type: !DEX
               targets: 3
               damage: 15d8
-              half_on_success: true
-    ";
+              half_on_success: true";
 
         let combatants: Vec<CombatantDto> =
             serde_yaml::from_str(yaml).expect("unable to parse test data");
         println!("{combatants:?}");
-        let (class, lvl) = combatants
-            .into_iter()
-            .find(|_| true)
-            .unwrap()
-            .character_lvl
-            .unwrap();
-        assert_eq!(CharacterLvl::Lvl5, lvl);
-        assert!(matches!(class, Druid));
+        let cfg: Vec<CombatantConfig> = combatants.into_iter().map(|e| e.into()).collect();
+        let resource_cfgs = &cfg.first().unwrap().resources;
+        assert_eq!(
+            4,
+            resource_cfgs
+                .get(&spell_lvl_to_resource_key(SpellLvl::Lvl1))
+                .unwrap()
+                .charges
+        );
+        assert_eq!(
+            3,
+            resource_cfgs
+                .get(&spell_lvl_to_resource_key(SpellLvl::Lvl2))
+                .unwrap()
+                .charges
+        );
+        assert_eq!(
+            2,
+            resource_cfgs
+                .get(&spell_lvl_to_resource_key(SpellLvl::Lvl3))
+                .unwrap()
+                .charges
+        );
     }
 }

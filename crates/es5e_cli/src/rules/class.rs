@@ -31,7 +31,7 @@ impl Class {
         }
     }
 
-    fn spell_slots_for_char_lvl(&self, lvl: CharacterLvl) -> HashMap<SpellLvl, u32> {
+    pub fn spell_slots_for_char_lvl(&self, lvl: CharacterLvl) -> HashMap<SpellLvl, u32> {
         if let Some(caster_type) = self.caster_type() {
             return caster_type.spell_slots_for_char_lvl(lvl);
         }
