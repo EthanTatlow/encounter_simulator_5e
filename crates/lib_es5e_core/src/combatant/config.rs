@@ -2,11 +2,11 @@ use std::rc::Rc;
 
 use crate::action::{action::Action, multi::MultiAction, single::SingleAction};
 
-use super::{combatant::Combatant, state::Resources, stats::CombatantStats};
+use super::{combatant::Combatant, state::ResourceCfgs, stats::CombatantStats};
 
 #[derive(Clone, Debug)]
 pub struct CombatantConfig {
-    pub resources: Resources,
+    pub resources: ResourceCfgs,
     pub actions: Vec<ActionType>,
     pub stats: CombatantStats,
 }

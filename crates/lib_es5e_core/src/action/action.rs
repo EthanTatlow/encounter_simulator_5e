@@ -1,14 +1,11 @@
-
-use std::{collections::HashMap};
-
+use crate::combat::encounter::IntMutCombatant;
 #[cfg(test)]
 use mockall::automock;
-use crate::combat::encounter::IntMutCombatant;
 
-
+use crate::combatant::state::ResourceCosts;
 
 #[cfg_attr(test, automock)]
 pub trait Action {
     fn execute(&self, _allies: &[IntMutCombatant], enemies: &[IntMutCombatant]);
-    fn resource_cost(&self) -> &HashMap<String, u32>;
+    fn resource_costs(&self) -> &ResourceCosts;
 }

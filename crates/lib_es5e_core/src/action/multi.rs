@@ -1,20 +1,20 @@
-use std::{collections::HashMap};
 use crate::combat::encounter::IntMutCombatant;
 
 
+use crate::combatant::{state::ResourceCosts};
 
 use super::{action::Action, single::SingleAction};
 
 #[derive(Debug, Clone)]
 pub struct MultiAction {
     actions: Vec<SingleAction>,
-    resource_cost: HashMap<String, u32>,
+    resource_cost: ResourceCosts,
 }
 
 impl MultiAction {
     pub fn new(actions: Vec<SingleAction>) -> Self {
-        let resource_cost = actions.iter().map(SingleAction::resource_cost).fold(
-            HashMap::<String, u32>::new(),
+        let resource_cost = actions.iter().map(SingleAction::resource_costs).fold(
+            ResourceCosts::new(),
             |mut acc, e| {
                 acc.extend(e.clone());
                 acc
@@ -34,7 +34,7 @@ impl Action for MultiAction {
             .for_each(|action| action.execute(allies, enemies));
     }
 
-    fn resource_cost(&self) -> &HashMap<String, u32> {
+    fn resource_costs(&self) -> &ResourceCosts {
         &self.resource_cost
     }
 }

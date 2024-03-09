@@ -1,7 +1,10 @@
-use std::{collections::HashMap};
 
-use crate::{combatant::combatant::Combatant, targeting::strategy::target_selection_strategy};
+
 use crate::combat::encounter::IntMutCombatant;
+use crate::{
+    combatant::{combatant::Combatant, state::ResourceCosts},
+    targeting::strategy::target_selection_strategy,
+};
 
 use super::{
     action::Action, attack::Attack, effect::Effect,
@@ -10,7 +13,7 @@ use super::{
 
 #[derive(Debug, Clone)]
 pub struct SingleAction {
-    pub resource_cost: HashMap<String, u32>,
+    pub resource_cost: ResourceCosts,
     pub execution: Execution,
 }
 
@@ -34,7 +37,7 @@ impl Action for SingleAction {
                 .for_each(|enemy| attack.apply(&mut enemy.borrow_mut() as &mut Combatant)),
         }
     }
-    fn resource_cost(&self) -> &HashMap<String, u32> {
+    fn resource_costs(&self) -> &ResourceCosts {
         &self.resource_cost
     }
 }

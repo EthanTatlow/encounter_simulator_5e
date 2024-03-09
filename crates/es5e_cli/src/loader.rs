@@ -3,7 +3,7 @@ use lib_es5e_core::{
     combatant::{
         config::CombatantConfig,
         defences::save::SaveModifiers,
-        state::{Recharge, ResourceConfig},
+        state::{Recharge, ResourceCfg, ResourceCosts},
     },
 };
 use lib_es5e_core::{action::multi::MultiAction, attack::save_based::SaveBasedAttack};
@@ -13,13 +13,13 @@ use lib_es5e_core::{
 use lib_es5e_core::{action::single::Execution, combatant::config::ActionType};
 use lib_es5e_core::{action::single::SingleAction, combatant::stats::CombatantStats};
 use lib_es5e_core::{
-    combatant::state::Resources,
+    combatant::state::ResourceCfgs,
     utils::save::{Save, SaveType},
 };
 use serde::{Deserialize, Serialize};
+use std::fs;
 use std::path::Path;
 use std::str::FromStr;
-use std::{collections::HashMap, fs};
 
 pub fn load_combatants_from_file(file_path: &Path) -> Vec<CombatantConfig> {
     let contents =
@@ -88,8 +88,8 @@ fn into_multi_action(actions: Vec<ActionDto>) -> ActionType {
     ))
 }
 
-fn multiple_actions_with_cost(actions: Vec<ActionDto>, name: String) -> ActionType {
-    let mut resource_cost = HashMap::new();
+fn multiple_actions_with_cost(actions: Vec<ActionDto>, name: usize) -> ActionType {
+    let mut resource_cost = ResourceCosts::new();
     resource_cost.insert(name, 1);
     let mut actions: Vec<SingleAction> = actions.into_iter().map(|x| x.into()).collect();
     if !actions.is_empty() {
@@ -105,16 +105,18 @@ fn multiple_actions_with_cost(actions: Vec<ActionDto>, name: String) -> ActionTy
     ActionType::MultiAction(MultiAction::new(actions))
 }
 
-fn get_action_selection_and_resources(actions: ActionSelectionDto) -> (Vec<ActionType>, Resources) {
+fn get_action_selection_and_resources(
+    actions: ActionSelectionDto,
+) -> (Vec<ActionType>, ResourceCfgs) {
     let default_multi = into_multi_action(actions.default);
-    let resources: Resources = actions
+    let resources: ResourceCfgs = actions
         .special
         .iter()
         .enumerate()
         .map(|(i, a)| {
             (
-                i.to_string(),
-                ResourceConfig::new(
+                i,
+                ResourceCfg::new(
                     1,
                     match a.recharge {
                         5 => Some(Recharge::Recharge5),
@@ -130,7 +132,7 @@ fn get_action_selection_and_resources(actions: ActionSelectionDto) -> (Vec<Actio
         .special
         .into_iter()
         .enumerate()
-        .map(|(i, conf)| multiple_actions_with_cost(conf.actions, i.to_string()))
+        .map(|(i, conf)| multiple_actions_with_cost(conf.actions, i))
         .collect();
     actions.push(default_multi);
     (actions, resources)
@@ -183,7 +185,7 @@ impl From<ActionDto> for SingleAction {
                     DamageRoll::from_str(dmg.as_str()).unwrap(),
                 )),
             },
-            resource_cost: HashMap::new(), // TODO
+            resource_cost: ResourceCosts::new(), // TODO
         }
     }
 }

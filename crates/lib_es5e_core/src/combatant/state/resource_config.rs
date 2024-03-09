@@ -1,17 +1,17 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
-use super::resources::Resource;
+pub type ResourceCfgs = BTreeMap<ResourceKey, ResourceCfg>;
+
+pub type ResourceKey = usize;
 
 #[derive(Clone, Debug)]
-pub struct ResourceConfig {
+pub struct ResourceCfg {
     pub(super) charges: u32,
     pub(super) max_charges: u32,
     pub(super) recharge: Option<Recharge>,
 }
 
-pub type Resources = HashMap<String, ResourceConfig>;
-
-impl ResourceConfig {
+impl ResourceCfg {
     pub fn new(charges: u32, recharge: Option<Recharge>) -> Self {
         Self::new_with_max(charges, charges, recharge)
     }
@@ -21,14 +21,6 @@ impl ResourceConfig {
             charges,
             max_charges,
             recharge,
-        }
-    }
-
-    pub(super) fn to_resource(&self, name: String) -> Resource {
-        Resource {
-            name,
-            charges: self.charges,
-            max_charges: self.max_charges,
         }
     }
 }

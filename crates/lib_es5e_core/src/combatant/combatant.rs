@@ -6,7 +6,7 @@ use crate::{
 };
 
 use super::{
-    state::{CombatantState, Resources},
+    state::{CombatantState, ResourceCfgs},
     stats::CombatantStats,
 };
 
@@ -24,7 +24,7 @@ impl Combatant {
         initiative: i16,
         action_selection: ActionSelection,
         saves: SaveModifiers,
-        resources: Resources,
+        resources: ResourceCfgs,
     ) -> Self {
         Self {
             action_selection,
@@ -45,7 +45,7 @@ impl Combatant {
         saves: SaveModifiers,
         action_selection: ActionSelection,
     ) -> Self {
-        Self::new_with_saves_and_resources(max_hp, ac, init, action_selection, saves, Resources::new())
+        Self::new_with_saves_and_resources(max_hp, ac, init, action_selection, saves, ResourceCfgs::new())
     }
 
     pub fn first_available_action(&self) -> Option<Rc<dyn Action>> {
@@ -61,7 +61,7 @@ impl Combatant {
     }
 
     pub fn use_resources(&mut self, action: &dyn Action) {
-        self.state.use_resource(action.resource_cost())
+        self.state.use_resource(action.resource_costs())
     }
 
     pub fn is_conscious(&self) -> bool {

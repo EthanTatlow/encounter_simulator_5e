@@ -2,7 +2,8 @@ mod combatant_state;
 mod resource_config;
 mod resources;
 
-pub use super::state::combatant_state::CombatantState;
-pub use super::state::resource_config::Recharge;
-pub use super::state::resource_config::ResourceConfig;
-pub use super::state::resource_config::Resources;
+pub use combatant_state::CombatantState;
+pub use combatant_state::ResourceCosts;
+pub use resource_config::Recharge;
+pub use resource_config::ResourceCfg;
+pub use resource_config::ResourceCfgs;
