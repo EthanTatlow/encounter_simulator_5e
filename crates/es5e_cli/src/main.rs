@@ -6,6 +6,7 @@ use statistics::MultiThreadStatistics;
 use std::path::Path;
 
 mod loader;
+mod rules;
 mod statistics;
 
 /// Combat encounter simulator for DnD 5e to simulate combat encounters

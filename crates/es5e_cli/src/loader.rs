@@ -1,3 +1,4 @@
+use crate::rules::{CharacterLvl, Class};
 use lib_es5e_core::{
     action::attack::Attack,
     combatant::{
@@ -38,6 +39,8 @@ struct CombatantDto {
     pub hp: u32,
     pub ac: i16,
     pub init: i16,
+    // Note: currently only used for spell slots
+    pub character_lvl: Option<(Class, CharacterLvl)>,
     pub saves: SaveModifiersDto,
     pub actions: ActionSelectionDto,
 }
@@ -195,6 +198,8 @@ mod test {
     use lib_es5e_core::combatant::config::CombatantConfig;
 
     use crate::loader::CombatantDto;
+    use crate::rules::CharacterLvl;
+    use crate::rules::Class::Druid;
 
     // Note: the API is currently very volatile, so more detailed tests are omitted for the time being
     #[test]
@@ -238,5 +243,48 @@ mod test {
             serde_yaml::from_str(yaml).expect("unable to parse test data");
         let part: Vec<CombatantConfig> = combatants.into_iter().map(|e| e.into()).collect();
         assert_eq!(part.len(), 1);
+    }
+
+    // Note: the API is currently very volatile, so more detailed tests are omitted for the time being
+    #[test]
+    fn test_parse_spellcaster() {
+        let yaml = "
+  - name: test druid
+    hp: 367
+    ac: 22
+    init: 1
+    character_lvl: [Druid, Lvl5]
+    saves:
+      str: 8
+      dex: 9
+      con: 14
+      int: 3
+      wis: 9
+      cha: 11
+    actions:
+      default: []
+      special:
+        - recharge: 5 # recharges on a 5 or higher when rolling 1d6
+          actions:
+            - !SaveBasedAttack
+              name: breath weapon
+              save_dc: 22
+              save_type: !DEX
+              targets: 3
+              damage: 15d8
+              half_on_success: true
+    ";
+
+        let combatants: Vec<CombatantDto> =
+            serde_yaml::from_str(yaml).expect("unable to parse test data");
+        println!("{combatants:?}");
+        let (class, lvl) = combatants
+            .into_iter()
+            .find(|_| true)
+            .unwrap()
+            .character_lvl
+            .unwrap();
+        assert_eq!(CharacterLvl::Lvl5, lvl);
+        assert!(matches!(class, Druid));
     }
 }
