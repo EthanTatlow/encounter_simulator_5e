@@ -6,6 +6,7 @@ use statistics::MultiThreadStatistics;
 use std::path::Path;
 
 mod loader;
+mod parser;
 mod rules;
 mod statistics;
 

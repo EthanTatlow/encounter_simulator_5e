@@ -25,7 +25,7 @@ pub enum CharacterLvl {
     Lvl20,
 }
 
-#[derive(EnumIter, PartialEq, Eq, Hash, Clone, Debug)]
+#[derive(EnumIter, PartialEq, Eq, Hash, Clone, Debug, Serialize, Deserialize)]
 pub enum SpellLvl {
     Lvl1,
     Lvl2,
