@@ -1,8 +1,7 @@
 - name: dragon
-  name: dragon
   hp: 367
-  ac: 1
-  init: 2
+  ac: 22
+  init: 1
   saves:
     str: 8
     dex: 9
@@ -11,23 +10,40 @@
     wis: 9
     cha: 11
   actions:
-    default:
-      - &claws !Attack
-        name: claws
-        atk: 15
-        dmg: 2d10+8
+    - !SingleAction
+      attack:
+        !SaveBasedAttack
+        name: breath weapon
+        save_dc: 22
+        save_type: !DEX
+        targets: 3
+        damage: 15d8
+        half_on_success: true
+      resource_costs:
+        - !Recharge5
+    - !MultiAction
+      - &claws
+        attack:
+          !Attack
+          name: claws
+          atk: 15
+          dmg: 2d10+8
       - *claws
-      - !Attack
-        name: bite
-        atk: 15
-        dmg: 2d6+8
-    special:
-      - recharge: 5 # recharges on a 5 or higher when rolling 1d6
-        actions:
-          - !SaveBasedAttack
-            name: breath weapon
-            save_dc: 22
-            save_type: !DEX
-            targets: 10
-            damage: 15d8
-            half_on_success: true
+      - attack:
+          !Attack
+          name: bite
+          atk: 15
+          dmg: 2d6+8
+      - attack:
+          !Attack
+          name: tail
+          atk: 15
+          dmg: 2d6+8
+      - attack:
+          !SaveBasedAttack
+          half_on_success: true
+          name: Wing Attack
+          save_dc: 19
+          save_type: !DEX
+          targets: 2
+          damage: 2d6+6
