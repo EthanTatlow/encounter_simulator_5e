@@ -1,10 +1,10 @@
-mod input;
+mod input_formats;
 
 #[cfg(test)]
 mod tests {
     use lib_es5e_core::combatant::config::CombatantConfig;
 
-    use crate::input;
+    use crate::input_formats;
 
     const TEST_DATA: &str = r#"{
         "name": "Orc",
@@ -177,7 +177,7 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let monster: input::Monster = serde_json::from_str(TEST_DATA).unwrap();
+        let monster: input_formats::Monster = serde_json::from_str(TEST_DATA).unwrap();
         println!("{:?}", CombatantConfig::from(monster));
     }
 }
