@@ -1,5 +1,2 @@
 [workspace]
-members = [
-    "crates/lib_es5e_core",
-    "crates/es5e_cli"
-]
+members = ["crates/lib_es5e_core", "crates/es5e_cli", "crates/es5e_importer"]
