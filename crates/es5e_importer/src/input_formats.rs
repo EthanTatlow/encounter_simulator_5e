@@ -9,6 +9,8 @@ use serde::{
     Deserialize, Deserializer, Serialize,
 };
 
+use crate::action::Action;
+
 #[derive(Serialize, Deserialize)]
 pub struct Monster {
     name: String,
@@ -94,12 +96,6 @@ pub struct HitPoints {
 
 #[derive(Serialize, Deserialize)]
 pub struct Trait {
-    name: String,
-    entries: Vec<String>,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct Action {
     name: String,
     entries: Vec<String>,
 }

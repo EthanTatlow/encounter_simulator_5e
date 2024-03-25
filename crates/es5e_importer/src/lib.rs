@@ -1,4 +1,5 @@
 mod input_formats;
+mod action;
 
 #[cfg(test)]
 mod tests {
