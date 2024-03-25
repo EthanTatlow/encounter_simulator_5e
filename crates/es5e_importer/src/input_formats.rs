@@ -104,19 +104,6 @@ pub struct Action {
     entries: Vec<String>,
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct SoundClip {
-    #[serde(rename = "type")]
-    clip_type: String,
-    path: String,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct AltArt {
-    name: String,
-    source: String,
-}
-
 // Custom deserializer for skill values
 fn deserialise_modifier_as_string<'de, D>(deserializer: D) -> Result<Option<i32>, D::Error>
 where
